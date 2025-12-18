@@ -7,10 +7,11 @@ import ArrowButton from "@/components/ui/ArrowButton";
 
 export default function Hero() {
   return (
-<section className="relative h-screen  bg-gradient-to-b from-[#F7F7F7] via-[#F7F7F7] to-[#F7DDDD]/40 overflow-x-hidden">
+<section className="relative h-screen  bg-gradient-to-b from-[#F7F7F7] via-[#F7F7F7] to-[#F7DDDD]/40 overflow-hidden">
 
 
 {/* Floating images */}
+<div className="hidden md:block">
 <Image
 src="/asset/frame-f.jpg"
 alt="frame1"
@@ -108,19 +109,25 @@ className="absolute top-[510.26px] left-[310.13px] rotate-[-1deg] opacity-100
     origin-top-left hidden md:block
   "
 />
+</div>
 
   {/* Center content */}
-  <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-   <HeadlineXL className="mb-4 sm:mb-6 md:mb-8 -translate-x-6 sm:-translate-x-10 md:-translate-x-[120px]">
+ <div className="relative z-10 flex h-full flex-col items-center justify-center text-center px-4 md:px-0">
+    <HeadlineXL className="
+    mb-2 md:mb-4
+    -translate-x-4
+    md:-translate-x-16
+    xl:-translate-x-36
+  ">
   Bring Your Mood
 </HeadlineXL>
 
 
-    <HeadlineXL className="mb-4 sm:mb-4 md:mb-4">
+    <HeadlineXL className="mb-4 md:mb-6">
       To Your Walls
     </HeadlineXL>
 
-   <Body2 className="text-[#121212] mb-8">
+   <Body2 className="text-[#121212] mb-8 mb-8 max-w-sm md:max-w-md">
       Discover posters that reflect you
     </Body2>
    <ArrowButton />

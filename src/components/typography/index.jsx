@@ -6,7 +6,7 @@ import React from "react";
 export const HeadlineXL = ({ children, className = "" }) => {
   return (
     <h1
-      className={`text-[80px] font-normal leading-[100%] lowercase font-['Alata'] ${className}`}
+      className={`text-[80px] font-normal leading-[100%] font-['Alata'] ${className}`}
     >
       {children}
     </h1>
@@ -16,12 +16,20 @@ export const HeadlineXL = ({ children, className = "" }) => {
 export const Headline = ({ children, className = "" }) => {
   return (
     <h1
-      className={`text-[54px] font-semibold leading-[100%] uppercase font-['Macan'] ${className}`}
+      className={`
+        text-[54px]
+        
+        uppercase
+        leading-[100%]
+        ${className}
+        font-[var(--font-poppins)]
+      `}
     >
       {children}
     </h1>
   );
 };
+
 
 export const Subheading1 = ({ children, className = "" }) => {
   return (
@@ -36,7 +44,8 @@ export const Subheading1 = ({ children, className = "" }) => {
 export const Subheading2 = ({ children, className = "" }) => {
   return (
     <h3
-      className={`text-[46px] leading-[100%] uppercase font-['Macan'] ${className}`}
+      className={`text-[33px] leading-[100%] uppercase font-[var(--font-poppins)]
+ ${className}`}
     >
       {children}
     </h3>
@@ -59,7 +68,7 @@ export const Body1 = ({ children, className = "" }) => {
 export const Body2 = ({ children, className = "" }) => {
   return (
     <p
-      className={`text-[20px] font-normal leading-[100%] font-['Helvetica Neue'] ${className}`}
+      className={`text-[18px] font-normal leading-[100%] font-['Helvetica Neue'] ${className}`}
     >
       {children}
     </p>
@@ -69,7 +78,7 @@ export const Body2 = ({ children, className = "" }) => {
 export const BodyMD = ({ children, className = "" }) => {
   return (
     <p
-      className={`text-[18px] font-medium leading-[100%] font-['Helvetica Neue'] ${className}`}
+      className={`text-[16px] font-medium leading-[100%] font-['Helvetica Neue'] ${className}`}
     >
       {children}
     </p>
@@ -79,7 +88,7 @@ export const BodyMD = ({ children, className = "" }) => {
 export const BodySM = ({ children, className = "" }) => {
   return (
     <p
-      className={`text-[16px] font-normal leading-[100%] font-['Helvetica Neue'] ${className}`}
+      className={`text-[14px] font-normal leading-[100%] font-['Helvetica Neue'] ${className}`}
     >
       {children}
     </p>
@@ -89,7 +98,7 @@ export const BodySM = ({ children, className = "" }) => {
 export const BodyXS = ({ children, className = "" }) => {
   return (
     <p
-      className={`text-[14px] font-light leading-[100%] font-['Helvetica Neue'] ${className}`}
+      className={`text-[12px] font-light leading-[100%] font-['Helvetica Neue'] ${className}`}
     >
       {children}
     </p>

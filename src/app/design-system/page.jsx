@@ -1,19 +1,12 @@
 import React from "react";
-import { Body1,
-  Body2,
-  Caption,
-  Headline,
-  HeadlineXL,
-  Label,
-  Subheading1,
-  Subheading2, } from "@/components/typography";
+import { Headline, Subheading2, Body1, HeadlineXL,Subheading1, Label,Body2,Caption} from "@/components/typography";
  import Swatch from "./components/Swatch";
-import PageWrapper from "@/components/layout/PageWrapper";
+
 import Button from "@/components/ui/Buttons";
 
 export default function DesignSystemPage () {
  return (
-  <PageWrapper>
+  
     <main className="ds-container">
       <Headline className="mb-6">Design system</Headline>
     {/* Colors Section */}
@@ -158,6 +151,6 @@ export default function DesignSystemPage () {
 </section>
 
   </main>
-  </PageWrapper>
+  
  )
 }

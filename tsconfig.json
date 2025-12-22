@@ -35,7 +35,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/dev/types/**/*.ts"
-, "src/components/sections/ShopWithUs.jsx"  ],
+, "src/components/sections/ShopWithUs.jsx", "src/components/layout/Header.jsx"  ],
   "exclude": [
     "node_modules"
   ]

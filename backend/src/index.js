@@ -1,20 +1,22 @@
 import express from "express";
-import dotenv from "dotenv";
-import cors from "cors";
-
-dotenv.config();
+import { db } from "./config/firebase.js";
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+app.get("/health", async (req, res) => {
+  try {
+    await db.collection("health").doc("check").set({
+      status: "ok",
+      time: new Date(),
+    });
 
-app.get("/health", (req, res) => {
-  res.json({ status: "Backend running 🚀" });
+    res.json({ message: "Firebase connected ✅" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Firebase connection failed ❌" });
+  }
 });
 
-const PORT = process.env.PORT || 4000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(process.env.PORT || 4000, () => {
+  console.log(`Server running on port ${process.env.PORT || 4000}`);
 });

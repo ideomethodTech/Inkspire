@@ -1,0 +1,187 @@
+export const HERO_CONTENT = {
+  headline: {
+    line1: "Bring Your Mood",
+    line2: "To Your Walls",
+  },
+  subtitle: "Discover posters that reflect you",
+  cta: {
+    label: "Explore Collection",
+    href: "/collections",
+  },
+};
+export const HERO_FRAMES_BASE = [
+  {
+    key: "frame-f",
+    src: "/asset/frame-f.jpg",
+    width: 340,
+    height: 207,
+    className:
+      "absolute left-[-34px] top-[-17px] scale-75 sm:scale-90 lg:scale-80 hidden md:block",
+  },
+  {
+    key: "frame-i",
+    src: "/asset/frame-i.jpg",
+    width: 250,
+    height: 220,
+    className:
+      "absolute left-[500px] top-[-17px] scale-70 sm:scale-85 lg:scale-80 hidden md:block",
+  },
+  {
+    key: "frame-c",
+    src: "/asset/frame-c.jpg",
+    width: 185,
+    height: 180,
+    className:
+      "absolute left-[855px] scale-70 sm:scale-85 lg:scale-80 hidden md:block",
+  },
+  {
+    key: "frame-d",
+    src: "/asset/frame-d.jpg",
+    width: 398,
+    height: 335,
+    className:
+      "absolute left-[1020px] scale-70 sm:scale-85 lg:scale-80 origin-top-left hidden md:block",
+  },
+  {
+    key: "frame-e",
+    src: "/asset/frame-e.jpg",
+    width: 185,
+    height: 209,
+    className:
+      "absolute top-[219px] left-[1180px] scale-70 sm:scale-85 lg:scale-80 hidden md:block",
+  },
+  {
+    key: "frame-b",
+    src: "/asset/frame-b.jpg",
+    width: 546,
+    height: 295,
+    className:
+      "absolute top-[420px] left-[1020px] scale-70 sm:scale-85 lg:scale-60 hidden md:block",
+  },
+  {
+    key: "frame-a",
+    src: "/asset/frame-a.jpg",
+    width: 400,
+    height: 204,
+    className:
+      "absolute top-[250px] left-[-1px] scale-70 sm:scale-85 lg:scale-80 hidden md:block",
+  },
+   {
+    key: "frame-g",
+    src: "/asset/frame-g.jpg",
+    width: 162,
+    height: 220,
+    className:
+      "absolute top-[400px] left-[400px] scale-70 sm:scale-85 lg:scale-70 hidden md:block",
+  },
+  
+  {
+    key: "frame-h",
+    src: "/asset/frame-h.png",
+    width: 128,
+    height: 128,
+    className:
+      "absolute top-[490px] left-[310px] rotate-[-1deg] scale-70 sm:scale-85 lg:scale-70 hidden md:block",
+  },
+];
+
+export const HERO_FRAMES_BASE_2 = [
+  {
+    key: "frame-ii",
+    src: "/asset/frame-ii.jpg",
+    width: 350,
+    height: 207,
+    className:
+      "absolute top-[-180px]  left-[-60px] scale-75 sm:scale-90 lg:scale-70 hidden md:block",
+  },
+  {
+    key: "frame-j",
+    src: "/asset/frame-j.jpg",
+    width: 250,
+    height: 220,
+    className:
+      "absolute top-[-150px] left-[500px] scale-80 sm:scale-95 lg:scale-90 hidden md:block",
+  },
+  {
+    key: "frame-k",
+    src: "/asset/frame-k.png",
+    width: 185,
+    height: 180,
+    className:
+      "absolute top-[-120px]  left-[950px] scale-70 sm:scale-85 lg:scale-80 hidden md:block",
+  },
+  {
+    key: "frame-l",
+    src: "/asset/frame-l.jpg",
+    width: 398,
+    height: 335,
+    className:
+      "absolute top-[-95px] left-[1110px] scale-60 sm:scale-65 lg:scale-60 origin-top-left hidden md:block",
+  },
+  {
+    key: "frame-m",
+    src: "/asset/frame-m.jpg",
+    width: 185,
+    height: 209,
+    className:
+      "absolute top-[173px] left-[1201px] scale-70 sm:scale-85 lg:scale-60 hidden md:block",
+  },
+  {
+    key: "frame-n",
+    src: "/asset/frame-n.jpg",
+    width: 546,
+    height: 295,
+    className:
+      "absolute top-[350px] left-[930px] scale-70 sm:scale-85 lg:scale-70 hidden md:block",
+  },
+  {
+    key: "frame-o",
+    src: "/asset/frame-o.png",
+    width: 200,
+    height: 204,
+    className:
+      "absolute top-[390px] left-[370px] scale-70 sm:scale-85 lg:scale-70 hidden md:block",
+  },
+  {
+    key: "frame-p",
+    src: "/asset/frame-p.png",
+    width: 162,
+    height: 220,
+    className:
+      "absolute top-[410px] left-[260px] rotate-[25deg]  scale-40 sm:scale-40 lg:scale-45 hidden md:block",
+  },
+  
+  {
+    key: "frame-q",
+    src: "/asset/frame-q.jpg",
+    width: 228,
+    height: 128,
+    className:
+      "absolute top-[290px] left-[-23px] scale-70 sm:scale-85 lg:scale-80 hidden md:block",
+  },
+];
+export const HERO_FRAMES = [
+  // First stack (visible)
+  ...HERO_FRAMES_BASE.map((frame, order) => ({
+    ...frame,
+    id: `${frame.key}-1`,
+    stack: 0,
+    order,
+    className: `
+      ${frame.className}
+      top-0
+    `,
+  })),
+
+  // Second stack (below screen)
+  ...HERO_FRAMES_BASE_2.map((frame, order) => ({
+    ...frame,
+    id: `${frame.key}-2`,
+    stack: 1,
+    order,
+    className: `
+      ${frame.className}
+      top-[100vh]
+    `,
+  })),
+];

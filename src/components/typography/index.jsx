@@ -6,7 +6,7 @@ import React from "react";
 export const HeadlineXL = ({ children, className = "" }) => {
   return (
     <h1
-      className={`text-[80px] font-normal leading-[100%] font-['Alata'] ${className}`}
+      className={`text-[70px] font-normal leading-[100%] font-['Alata'] ${className}`}
     >
       {children}
     </h1>

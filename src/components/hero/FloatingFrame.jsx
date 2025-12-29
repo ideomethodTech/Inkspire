@@ -13,13 +13,14 @@ export default function FloatingFrames() {
       <motion.div
         className="flex flex-col h-[200%]"
         initial={{ y: "0%" }}
-        animate={{ y: ["0%", "-60%", "-50%"] }}
+        animate={{ y: ["0%", "-70%", "-50%"] }}
         transition={{
           duration: 2.4,
           times: [0, 0.6, 1], // fast → slow
           ease: [
             [0.4, 0, 1, 1],   // fast sweep
             [0.22, 1, 0.36, 1], // slow settle (Figma-like)
+            [0.34, 1.56, 0.64, 1],
           ],
         }}
       >

@@ -1,13 +1,13 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { HERO_CONTENT } from "@/lib/constants/hero";
 import { HeadlineXL, Body2 } from "../typography";
 import ArrowButton from "@/components/ui/ArrowButton";
 
-export default function HeroContent({ product }) {
+export default function HeroContent() {
+  const { headline, subtitle } = HERO_CONTENT;
   const reduced = useReducedMotion();
-
-  if (!product) return null; // nothing to show yet
 
   return (
     <div className="relative z-10 flex h-full flex-col items-center justify-center text-center px-4 md:px-0">
@@ -16,12 +16,12 @@ export default function HeroContent({ product }) {
         initial={{ y: reduced ? 0 : -12 }}
         animate={{ y: reduced ? 0 : [-12, 0, -4, 0] }}
         transition={{
-          duration: 2.4,
+          duration: 2.4, // match frame motion
           ease: [0.22, 1, 0.36, 1],
         }}
       >
         <HeadlineXL className="mb-2 mt-30 mr-40 md:mb-4 -translate-x-4 md:-translate-x-16 xl:-translate-x-36">
-          {product.name.split(" ")[0]} {/* example: first word as line1 */}
+          {headline.line1}
         </HeadlineXL>
       </motion.div>
 
@@ -35,7 +35,7 @@ export default function HeroContent({ product }) {
         }}
       >
         <HeadlineXL className="mb-4 md:mb-6 mr-44">
-          {product.name.split(" ").slice(1).join(" ")} {/* rest of name as line2 */}
+          {headline.line2}
         </HeadlineXL>
       </motion.div>
 
@@ -49,7 +49,7 @@ export default function HeroContent({ product }) {
         }}
       >
         <Body2 className="text-[#121212] mb-8 max-w-sm md:max-w-md">
-          {product.description}
+          {subtitle}
         </Body2>
       </motion.div>
 
@@ -62,7 +62,7 @@ export default function HeroContent({ product }) {
           ease: [0.22, 1, 0.36, 1],
         }}
       >
-        <ArrowButton href={`/products/${product.id}`} />
+        <ArrowButton />
       </motion.div>
     </div>
   );

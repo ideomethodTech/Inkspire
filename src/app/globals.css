@@ -52,16 +52,3 @@ body {
   color: var(--foreground);
   font-family: var(--font-body);
 }
-
-@keyframes scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-30%);
-  }
-}
-
-.animate-scroll {
-  animation: scroll 40s linear infinite;
-}

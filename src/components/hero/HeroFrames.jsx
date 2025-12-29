@@ -1,16 +1,14 @@
-import { HERO_FRAMES } from "@/constants/hero";
 import FloatingFrame from "./FloatingFrame";
 
-export default function HeroFrames() {
+export default function HeroFrames({ products }) {
+  if (!products || products.length === 0) return null;
+
   return (
     <div className="hidden md:block">
-      {HERO_FRAMES.map((frame) => (
+      {products.map((product) => (
         <FloatingFrame
-          key={frame.id}
-          src={frame.src}
-          width={frame.width}
-          height={frame.height}
-          className={frame.className}
+          key={product.id}
+          images={product.images} // pass images array
         />
       ))}
     </div>

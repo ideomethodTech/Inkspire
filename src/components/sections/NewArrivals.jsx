@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { Headline} from "../typography";
+import { Headline } from "../typography";
 
 export default function NewArrivals() {
   return (
@@ -13,7 +13,7 @@ export default function NewArrivals() {
 
       {/* Images */}
       <div className="flex justify-center gap-4">
-         <Image
+        <Image
           src="/poster/poster-c.jpg"
           alt="poster 3"
           width={342}
@@ -34,7 +34,7 @@ export default function NewArrivals() {
           height={596}
           className="object-cover"
         />
-      
+
       </div>
       <div className="w-full max-w-[1321px] h-[2px] bg-gradient-to-r from-red-500 to-red-500/5 mt-12 mx-auto" />
 

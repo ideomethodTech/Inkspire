@@ -62,7 +62,7 @@ export default function HeroContent() {
           ease: [0.22, 1, 0.36, 1],
         }}
       >
-        <ArrowButton />
+        <ArrowButton href="/products" />
       </motion.div>
     </div>
   );

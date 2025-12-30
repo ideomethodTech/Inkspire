@@ -4,6 +4,7 @@
 import { Headline, Body2 } from "../typography";
 import BestsellerCarousel from "../bestseller/BestsellerCarousel";
 import { BESTSELLER_IMAGES } from "@/lib/constants/bestseller";
+import Link from "next/link";
 
 
 export default function Bestseller() {
@@ -12,7 +13,8 @@ export default function Bestseller() {
       {/* title & captions */}
       <div className="mb-2 flex justify-center relative z-20">
         <div className="relative isolate text-center md:px-8 py-6">
-          <div className="absolute inset-0 scale-125 md:scale-150 rounded-full bg-[#F7DDDD] blur-3xl opacity-100" />
+          <div className="absolute inset-0 scale-125 md:scale-150 rounded-full bg-[#F7DDDD] blur-3xl opacity-100 pointer-events-none" />
+
 
           <Headline className="relative z-10 text-3xl md:text-5xl font-medium">
             Our Bestseller
@@ -22,9 +24,10 @@ export default function Bestseller() {
             The designs our community can’t get enough of
           </Body2>
 
-          <button className="mt-4 md:mt-6 text-[12px] text-[#E11B1B] underline">
+          <Link
+  href="/products" className="mt-4 md:mt-6 text-[12px] text-[#E11B1B] underline">
             Shop Now
-          </button>
+          </Link>
         </div>
       </div>
 

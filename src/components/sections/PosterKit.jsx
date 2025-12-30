@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { Headline } from "../typography";
 import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 
 
 
@@ -11,20 +12,24 @@ export default function PosterKitSeries() {
       {/* Header */}
       <div className="mb-8 md:mb-12 px-4 md:px-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <Headline className="font-medium  font-medium">POSTERKIT SERIES</Headline>
-        <button className="flex items-center gap-2 text-sm self-start md:self-auto">
-          <p className="italic tracking-tight  text-[#E11B1B]">
-            Shop Now
-          </p>
-          <span
-            className="
+      
+<Link
+  href="/products"
+  className="flex items-center gap-2 text-sm self-start md:self-auto"
+>
+  <p className="italic tracking-tight text-[#E11B1B]">
+    Shop Now
+  </p>
+  <span
+    className="
       flex items-center justify-center
       w-6 h-6
       border border-gray-300 rounded bg-white
     "
-          >
-            <ArrowUpRight size={12} strokeWidth={1.5} />
-          </span>
-        </button>
+  >
+    <ArrowUpRight size={12} strokeWidth={1.5} />
+  </span>
+</Link>
       </div>
       {/* Images */}
       <div

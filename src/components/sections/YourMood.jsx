@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Subheading2, Body2, BodyMD } from "../typography";
+import Link from "next/link";
 
 export default function YourMood() {
   return (
@@ -41,10 +42,9 @@ export default function YourMood() {
           </div>
           {/* Images + Shop Now */}
           <div className="col-span-8 flex items-end">
-            {/* Shop Now — bottom left of images */}
-            <button className="italic tracking-tight whitespace-nowrap text-[#E11B1B] text-[12px] underline self-end mr-2">
+            <Link href="/products" className="italic tracking-tight whitespace-nowrap text-[#E11B1B] text-[12px] underline self-end mr-2">
               Shop Now
-            </button>
+            </Link>
             <Image
               src="/poster/poster-c.jpg"
               alt="Pop culture posters"
@@ -61,7 +61,7 @@ export default function YourMood() {
             />
           </div>
         </div>
-        {/* ================= SECTION 02 ================= */}
+       
         <div className="grid grid-cols-12 gap-8 mb-8">
           {/* Images */}
           <div className="col-span-8 flex items-end gap-4">
@@ -80,10 +80,11 @@ export default function YourMood() {
               className="h-[300px] w-[420px] object-cover"
             />
 
-            {/* Shop Now — bottom right only */}
-            <button className="italic tracking-tight whitespace-nowrap text-[#E11B1B] text-[12px] underline self-end mb-1">
+
+
+            <Link href="/products" className="italic tracking-tight whitespace-nowrap text-[#E11B1B] text-[12px] underline self-end mb-1">
               Shop Now
-            </button>
+            </Link>
           </div>
 
           {/* Text (stays UP) */}
@@ -118,10 +119,10 @@ export default function YourMood() {
 
           {/* Images */}
           <div className="col-span-8 flex items-end">
-            {/* Shop Now — bottom left of images */}
-            <button className="italic tracking-tight whitespace-nowrap text-[#E11B1B] text-[12px] underline self-end mr-2">
+          
+            <Link href="/products" className="italic tracking-tight whitespace-nowrap text-[#E11B1B] text-[12px] underline self-end mr-2">
               Shop Now
-            </button>
+            </Link>
             <Image
               src="/poster/poster-c.jpg"
               alt="Pop culture posters"

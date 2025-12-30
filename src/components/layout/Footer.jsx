@@ -1,4 +1,5 @@
 import { Headline } from "../typography";
+import Link from "next/link";
 
 export default function Footer() {
   return (
@@ -58,7 +59,12 @@ export default function Footer() {
           <h3 className="text-sm font-semibold mb-4">INFORMATION</h3>
           <ul className="space-y-2 text-sm text-gray-300">
             <li>About Us</li>
-            <li>Contact Us</li>
+            <li>
+              <Link href="/contact"
+              className="hover:text-white transition-colors">
+                Contact Us
+                </Link>
+            </li>
             <li>FAQs</li>
             <li>Shipping & Returns</li>
             <li>Track Order</li>

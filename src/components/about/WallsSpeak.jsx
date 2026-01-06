@@ -1,25 +1,54 @@
+"use client";
+
 import Image from "next/image";
-import { Headline, BodyXS } from "../typography";
+import { motion } from "framer-motion";
+import { Headline } from "../typography";
+
+const images = [
+  "/asset/pic-1.webp",
+  "/asset/pic-2.webp",
+  "/asset/pic-3.webp",
+  "/asset/pic-4.webp",
+  "/asset/pic-5.webp",
+  "/asset/pic-6.webp",  
+];
 
 export default function WallsSpeak() {
   return (
-    <section className="max-w-7xl mx-auto px-6 py-24">
+    <section className="max-w-7xl mx-auto px-6 py-24 overflow-hidden">
       <Headline className="text-2xl font-semibold mb-10">
         WALLS SPEAK —
       </Headline>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        {[1, 2, 3].map((img) => (
-          <Image
-            key={img}
-            src={`/images/about/wall-${img}.jpg`}
-            alt="Wall art"
-            width={400}
-            height={400}
-            className="rounded-md"
-          />
+      {/* CAROUSEL */}
+      <motion.div
+        className="flex gap-6 cursor-grab"
+        drag="x"
+        dragConstraints={{ left: -400, right: 0 }}
+        whileTap={{ cursor: "grabbing" }}
+      >
+        {images.map((src, index) => (
+          <motion.div
+            key={index}
+            className="
+              relative
+              flex-shrink-0
+              w-[280px]
+              h-[280px]
+              md:w-[360px]
+              md:h-[360px]
+            "
+          >
+            <Image
+              src={src}
+              alt="Wall art"
+              fill
+              className="object-cover rounded-md"
+              priority
+            />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }

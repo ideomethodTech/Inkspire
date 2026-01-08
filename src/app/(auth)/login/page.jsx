@@ -1,9 +1,5 @@
-// Login Page
+import AuthModal from "@/components/auth/AuthModal";
+
 export default function LoginPage() {
-  return (
-    <div>
-      <h1>Login</h1>
-      {/* TODO: Add login form */}
-    </div>
-  );
+  return <AuthModal initialMode="signin" />;
 }

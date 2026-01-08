@@ -1,11 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Search, User, Heart, ShoppingBag, ChevronDown } from "lucide-react";
 import { Subheading2 } from "../typography";
+import AuthModal from "@/components/auth/AuthModal";
 
 export default function Header() {
+  const [showAuth, setShowAuth] = useState(false);
+
   return (
+    <>
     <header className="w-full border-b border-gray-200 bg-white">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         
@@ -46,12 +51,22 @@ export default function Header() {
 
         {/* Icons */}
         <div className="flex items-center gap-5">
-          <Search size={18} />
-          <User size={18} />
+          <Search size={18} />          
+            <button onClick={() => setShowAuth(true)}>
+              <User size={18} />
+            </button>
           <Heart size={18} />
           <ShoppingBag size={18} />
         </div>
       </div>
     </header>
+    {/* AUTH MODAL */}
+      {showAuth && (
+        <AuthModal
+          initialMode="email"
+          onClose={() => setShowAuth(false)}
+        />
+      )}
+    </>
   );
 }

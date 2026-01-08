@@ -1,9 +1,5 @@
-// Register Page
+import AuthModal from "@/components/auth/AuthModal";
+
 export default function RegisterPage() {
-  return (
-    <div>
-      <h1>Register</h1>
-      {/* TODO: Add register form */}
-    </div>
-  );
+  return <AuthModal initialMode="signup" />;
 }

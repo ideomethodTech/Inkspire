@@ -2,10 +2,9 @@ import dotenv from "dotenv";
 import admin from "firebase-admin";
 import fs from "fs";
 
-dotenv.config(); // 🔑 LOAD ENV HERE (CRITICAL)
+dotenv.config();
 
 const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT;
-
 if (!serviceAccountPath) {
   throw new Error("FIREBASE_SERVICE_ACCOUNT not set in env");
 }
@@ -19,4 +18,5 @@ admin.initializeApp({
 });
 
 export const db = admin.firestore();
+export const auth = admin.auth();
 export default admin;

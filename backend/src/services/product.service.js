@@ -1,212 +1,293 @@
-import { db } from '../config/firebase.js';
-import { createProductDoc, productResponse } from '../models/product.model.js';
+import Product from "../../models/mongo/product.model.js";
 
 export class ProductService {
-  // Get all collections to search
-  static getCollections(type = null) {
-    const allCollections = ['posters', 'kits', 'stickers'];
-    if (type) {
-      const typeMap = {
-        poster: 'posters',
-        kit: 'kits',
-        sticker: 'stickers'
-      };
-      return [typeMap[type] || 'posters'];
-    }
-    return allCollections;
-  }
-
   // Create new product
   static async createProduct(productData) {
     try {
-      const collection = productData.type === 'poster' ? 'posters' : 
-                        productData.type === 'kit' ? 'kits' : 'stickers';
+      const product = new Product({
+        ...productData,
+        active: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
       
-      const productRef = db.collection(collection).doc();
-      const product = createProductDoc(productData);
-      
-      await productRef.set(product);
+      await product.save();
       
       return {
-        id: productRef.id,
-        ...productResponse(productRef.id, product)
+        success: true,
+        message: 'Product created successfully',
+        data: {
+          id: product._id,
+          name: product.name,
+          type: product.type,
+          category: product.category,
+          description: product.description,
+          price: product.price,
+          variants: product.variants,
+          images: product.images,
+          tags: product.tags,
+          featured: product.featured,
+          trending: product.trending,
+          bestseller: product.bestseller,
+          active: product.active,
+          createdAt: product.createdAt,
+          updatedAt: product.updatedAt
+        }
       };
     } catch (error) {
       throw new Error(`Failed to create product: ${error.message}`);
     }
   }
 
-  // Get all products with filters - FIXED VERSION
+  // Get all products with filters
   static async getAllProducts(filters = {}) {
     try {
-      const { type, category, featured, trending, bestseller, limit = 20, page = 1 } = filters;
+      const { 
+        type, 
+        category, 
+        featured, 
+        trending, 
+        bestseller, 
+        limit = 20, 
+        page = 1,
+        showInactive = false  // Add this for admin
+      } = filters;
       
-      const collections = this.getCollections(type);
-      let allProducts = [];
+      // If showInactive is false, only show active products
+      // If showInactive is true, show all products (admin view)
+      const query = showInactive ? {} : { active: true };
       
-      for (const collection of collections) {
-        let query = db.collection(collection).where('active', '==', true);
-        
-        // Apply filters
-        if (category) query = query.where('category', '==', category);
-        if (featured) query = query.where('featured', '==', true);
-        if (trending) query = query.where('trending', '==', true);
-        if (bestseller) query = query.where('bestseller', '==', true);
-        
-        const snapshot = await query.get();
-        
-        const products = snapshot.docs.map(doc => ({
-          ...productResponse(doc.id, doc.data()),
-          collection: collection // Add collection info
-        }));
-        
-        allProducts = [...allProducts, ...products];
-      }
+      if (type) query.type = type;
+      if (category) query.category = category;
+      if (featured === 'true') query.featured = true;
+      if (trending === 'true') query.trending = true;
+      if (bestseller === 'true') query.bestseller = true;
       
-      // Simple pagination
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedProducts = allProducts.slice(startIndex, endIndex);
+      const skip = (page - 1) * limit;
+      
+      const [products, total] = await Promise.all([
+        Product.find(query)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(parseInt(limit))
+          .lean(),
+        Product.countDocuments(query)
+      ]);
+      
+      const formattedProducts = products.map(product => ({
+        id: product._id,
+        name: product.name,
+        type: product.type,
+        category: product.category,
+        price: product.price,
+        description: product.description,
+        variants: product.variants,
+        images: product.images,
+        tags: product.tags,
+        featured: product.featured,
+        trending: product.trending,
+        bestseller: product.bestseller,
+        active: product.active,  // Include active status for admin
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt
+      }));
       
       return {
-        products: paginatedProducts,
-        total: allProducts.length,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(allProducts.length / limit)
+        success: true,
+        message: 'Products fetched successfully',
+        data: {
+          products: formattedProducts,
+          total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          totalPages: Math.ceil(total / limit),
+          showInactive: showInactive  // Return the flag
+        }
       };
     } catch (error) {
       throw new Error(`Failed to fetch products: ${error.message}`);
     }
   }
 
-  // Get single product by ID - FIXED VERSION
-  static async getProductById(productId, type) {
+  // Get single product
+  static async getProductById(productId) {
     try {
-      const collections = type ? [this.getCollections(type)[0]] : this.getCollections();
+      const product = await Product.findOne({ 
+        _id: productId, 
+        active: true 
+      }).lean();
       
-      for (const collection of collections) {
-        const productRef = db.collection(collection).doc(productId);
-        const doc = await productRef.get();
-        
-        if (doc.exists) {
-          return {
-            ...productResponse(doc.id, doc.data()),
-            collection: collection
-          };
-        }
+      if (!product) {
+        throw new Error('Product not found');
       }
       
-      throw new Error('Product not found');
+      return {
+        success: true,
+        message: 'Product fetched successfully',
+        data: {
+          id: product._id,
+          name: product.name,
+          type: product.type,
+          category: product.category,
+          price: product.price,
+          description: product.description,
+          variants: product.variants,
+          images: product.images,
+          tags: product.tags,
+          featured: product.featured,
+          trending: product.trending,
+          bestseller: product.bestseller,
+          createdAt: product.createdAt,
+          updatedAt: product.updatedAt
+        }
+      };
     } catch (error) {
       throw new Error(`Failed to fetch product: ${error.message}`);
     }
   }
 
-  // Search products - SIMPLE VERSION (no indexes needed)
+  // Search products
   static async searchProducts(searchTerm, filters = {}) {
     try {
       const { type, category, limit = 20 } = filters;
-      const collections = this.getCollections(type);
-      let products = [];
       
-      for (const collection of collections) {
-        let query = db.collection(collection).where('active', '==', true);
-        
-        if (category) {
-          query = query.where('category', '==', category);
-        }
-        
-        const snapshot = await query.get();
-        
-        const filteredProducts = snapshot.docs
-          .map(doc => ({
-            ...productResponse(doc.id, doc.data()),
-            collection: collection
-          }))
-          .filter(product => {
-            const searchLower = searchTerm.toLowerCase();
-            return (
-              product.name.toLowerCase().includes(searchLower) ||
-              product.description.toLowerCase().includes(searchLower) ||
-              product.tags.some(tag => tag.toLowerCase().includes(searchLower))
-            );
-          });
-        
-        products = [...products, ...filteredProducts];
-        
-        if (products.length >= limit) {
-          products = products.slice(0, limit);
-          break;
-        }
-      }
+      const query = { 
+        active: true,
+        $text: { $search: searchTerm }
+      };
+      
+      if (type) query.type = type;
+      if (category) query.category = category;
+      
+      const products = await Product.find(query)
+        .limit(parseInt(limit))
+        .lean();
+      
+      const formattedProducts = products.map(product => ({
+        id: product._id,
+        name: product.name,
+        type: product.type,
+        category: product.category,
+        price: product.price,
+        description: product.description,
+        variants: product.variants,
+        images: product.images,
+        tags: product.tags,
+        featured: product.featured,
+        trending: product.trending,
+        bestseller: product.bestseller,
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt
+      }));
       
       return {
-        products,
-        total: products.length
+        success: true,
+        message: 'Search completed',
+        data: {
+          products: formattedProducts,
+          total: products.length
+        }
+      };
+    } catch (error) {
+      // If text index not available, fall back to regex search
+      if (error.message.includes('text index')) {
+        return this.fallbackSearch(searchTerm, filters);
+      }
+      throw new Error(`Search failed: ${error.message}`);
+    }
+  }
+
+  // Fallback search without text index
+  static async fallbackSearch(searchTerm, filters = {}) {
+    try {
+      const { type, category, limit = 20 } = filters;
+      
+      const query = { active: true };
+      
+      if (type) query.type = type;
+      if (category) query.category = category;
+      
+      const regex = new RegExp(searchTerm, 'i');
+      query.$or = [
+        { name: regex },
+        { description: regex },
+        { tags: regex }
+      ];
+      
+      const products = await Product.find(query)
+        .limit(parseInt(limit))
+        .lean();
+      
+      const formattedProducts = products.map(product => ({
+        id: product._id,
+        name: product.name,
+        type: product.type,
+        category: product.category,
+        price: product.price,
+        description: product.description,
+        variants: product.variants,
+        images: product.images,
+        tags: product.tags,
+        featured: product.featured,
+        trending: product.trending,
+        bestseller: product.bestseller,
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt
+      }));
+      
+      return {
+        success: true,
+        message: 'Search completed',
+        data: {
+          products: formattedProducts,
+          total: products.length
+        }
       };
     } catch (error) {
       throw new Error(`Search failed: ${error.message}`);
     }
   }
 
-  // Get homepage sections - FIXED VERSION
+  // Get homepage sections
   static async getHomepageSections() {
     try {
-      const collections = this.getCollections();
-      let featured = [], trending = [], bestsellers = [], newArrivals = [];
+      const [featured, trending, bestsellers, newArrivals] = await Promise.all([
+        Product.find({ featured: true, active: true }).limit(8).lean(),
+        Product.find({ trending: true, active: true }).limit(8).lean(),
+        Product.find({ bestseller: true, active: true }).limit(8).lean(),
+        Product.find({ active: true })
+          .sort({ createdAt: -1 })
+          .limit(8)
+          .lean()
+      ]);
       
-      for (const collection of collections) {
-        // Get featured
-        const featuredSnapshot = await db.collection(collection)
-          .where('featured', '==', true)
-          .where('active', '==', true)
-          .limit(8)
-          .get();
-        
-        featured = [...featured, ...featuredSnapshot.docs.map(doc => 
-          productResponse(doc.id, doc.data())
-        )];
-        
-        // Get trending
-        const trendingSnapshot = await db.collection(collection)
-          .where('trending', '==', true)
-          .where('active', '==', true)
-          .limit(8)
-          .get();
-        
-        trending = [...trending, ...trendingSnapshot.docs.map(doc => 
-          productResponse(doc.id, doc.data())
-        )];
-        
-        // Get bestsellers
-        const bestsellerSnapshot = await db.collection(collection)
-          .where('bestseller', '==', true)
-          .where('active', '==', true)
-          .limit(8)
-          .get();
-        
-        bestsellers = [...bestsellers, ...bestsellerSnapshot.docs.map(doc => 
-          productResponse(doc.id, doc.data())
-        )];
-        
-        // Get new arrivals
-        const newArrivalsSnapshot = await db.collection(collection)
-          .where('active', '==', true)
-          .orderBy('createdAt', 'desc')
-          .limit(8)
-          .get();
-        
-        newArrivals = [...newArrivals, ...newArrivalsSnapshot.docs.map(doc => 
-          productResponse(doc.id, doc.data())
-        )];
-      }
+      const formatProducts = (products) => 
+        products.map(product => ({
+          id: product._id,
+          name: product.name,
+          type: product.type,
+          category: product.category,
+          price: product.price,
+          description: product.description,
+          variants: product.variants,
+          images: product.images,
+          tags: product.tags,
+          featured: product.featured,
+          trending: product.trending,
+          bestseller: product.bestseller,
+          createdAt: product.createdAt,
+          updatedAt: product.updatedAt
+        }));
       
       return {
-        featured: featured.slice(0, 8),
-        trending: trending.slice(0, 8),
-        bestsellers: bestsellers.slice(0, 8),
-        newArrivals: newArrivals.slice(0, 8)
+        success: true,
+        message: 'Homepage data fetched',
+        data: {
+          featured: formatProducts(featured),
+          trending: formatProducts(trending),
+          bestsellers: formatProducts(bestsellers),
+          newArrivals: formatProducts(newArrivals)
+        }
       };
     } catch (error) {
       throw new Error(`Failed to fetch homepage data: ${error.message}`);
@@ -214,45 +295,101 @@ export class ProductService {
   }
 
   // Update product
-  static async updateProduct(productId, type, updateData) {
+  static async updateProduct(productId, updateData) {
     try {
-      const collection = type === 'poster' ? 'posters' : 
-                        type === 'kit' ? 'kits' : 'stickers';
+      updateData.updatedAt = new Date();
       
-      const productRef = db.collection(collection).doc(productId);
+      const product = await Product.findOneAndUpdate(
+        { _id: productId },
+        updateData,
+        { new: true, runValidators: true }
+      ).lean();
       
-      // Check if product exists
-      const doc = await productRef.get();
-      if (!doc.exists) {
+      if (!product) {
         throw new Error('Product not found');
       }
       
-      updateData.updatedAt = new Date();
-      await productRef.update(updateData);
-      
-      const updatedDoc = await productRef.get();
-      return productResponse(productId, updatedDoc.data());
+      return {
+        success: true,
+        message: 'Product updated successfully',
+        data: {
+          id: product._id,
+          name: product.name,
+          type: product.type,
+          category: product.category,
+          price: product.price,
+          description: product.description,
+          variants: product.variants,
+          images: product.images,
+          tags: product.tags,
+          featured: product.featured,
+          trending: product.trending,
+          bestseller: product.bestseller,
+          active: product.active,
+          createdAt: product.createdAt,
+          updatedAt: product.updatedAt
+        }
+      };
     } catch (error) {
       throw new Error(`Failed to update product: ${error.message}`);
     }
   }
 
   // Delete product (soft delete)
-  static async deleteProduct(productId, type) {
+  static async deleteProduct(productId) {
     try {
-      const collection = type === 'poster' ? 'posters' : 
-                        type === 'kit' ? 'kits' : 'stickers';
+      const product = await Product.findOneAndUpdate(
+        { _id: productId },
+        { active: false, updatedAt: new Date() },
+        { new: true }
+      ).lean();
       
-      const productRef = db.collection(collection).doc(productId);
+      if (!product) {
+        throw new Error('Product not found');
+      }
       
-      await productRef.update({
-        active: false,
-        updatedAt: new Date()
-      });
-      
-      return { message: 'Product deleted successfully', id: productId };
+      return {
+        success: true,
+        message: 'Product deleted successfully',
+        data: { id: productId }
+      };
     } catch (error) {
       throw new Error(`Failed to delete product: ${error.message}`);
+    }
+  }
+
+  // Get product by ID for admin (can see inactive)
+  static async getProductByIdForAdmin(productId) {
+    try {
+      const product = await Product.findById(productId).lean();
+      
+      if (!product) {
+        throw new Error('Product not found');
+      }
+      
+      return {
+        success: true,
+        message: 'Product fetched successfully',
+        data: {
+          id: product._id,
+          name: product.name,
+          type: product.type,
+          category: product.category,
+          price: product.price,
+          description: product.description,
+          variants: product.variants,
+          images: product.images,
+          tags: product.tags,
+          featured: product.featured,
+          trending: product.trending,
+          bestseller: product.bestseller,
+          active: product.active,
+          createdAt: product.createdAt,
+          updatedAt: product.updatedAt
+        }
+      };
+    } catch (error) {
+      throw new Error(`Failed to fetch product: ${error.message}`);
     }
   }
 }

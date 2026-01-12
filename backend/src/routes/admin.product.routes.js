@@ -5,33 +5,16 @@ import { adminOnly } from '../middlewares/admin.middleware.js';
 
 const router = express.Router();
 
-// All admin product routes
+// All admin product routes require authentication + admin role
 router.use(authenticate);
 router.use(adminOnly);
 
-// Create product
+// Admin-only product routes
 router.post('/products', ProductController.createProduct);
-
-// Update product
 router.put('/products/:id', ProductController.updateProduct);
-
-// Delete product
 router.delete('/products/:id', ProductController.deleteProduct);
 
-// Get all products (admin view - with inactive)
-router.get('/products', async (req, res) => {
-  try {
-    // You can add admin-specific logic here
-    return res.status(200).json({
-      success: true,
-      message: 'Admin products route - to be implemented'
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
+// Admin view of products (can see inactive)
+router.get('/products', ProductController.getAllProducts);
 
 export default router;

@@ -3,10 +3,13 @@ import Image from "next/image";
 import { Headline } from "../typography";
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-
+import { MOCK_PRODUCTS } from "@/lib/constants/products";
 
 
 export default function PosterKitSeries() {
+
+    const posterKitSeries = MOCK_PRODUCTS.slice(0, 3);
+
   return (
     <section className="bg-[#F7F7F7] py-20 md:py-28 xl:py-32">
       {/* Header */}
@@ -31,49 +34,30 @@ export default function PosterKitSeries() {
   </span>
 </Link>
       </div>
-      {/* Images */}
-      <div
-        className="
-          flex flex-col gap-6
-          md:flex-row md:justify-center md:gap-4
-          px-4 md:px-0
-        "
-      >
-
-        <Image
-          src="/poster/poster-c.jpg"
-          alt="poster 3"
-          width={342}
-          height={573}
-          className="object-cover w-full md:w-[260px] xl:w-[342px]"
-        />
-        <Image
-          src="/poster/poster-a.jpg"
-          alt="poster 1"
-          width={342}
-          height={573}
-          className="object-cover w-full md:w-[260px] xl:w-[342px]"
-        />
-
-        <Image
-          src="/poster/poster-b.jpg"
-          alt="poster 2"
-          width={586}
-          height={596}
-          className="object-cover w-full md:w-[420px] xl:w-[586px]"
-        />
-      </div>
-      <div
-        className="
-          w-full max-w-[1321px] h-[2px]
-          bg-gradient-to-r
-          from-[#E11B1B]
-          via-[#E11B1B]/15
-          to-transparent
-          mt-8 md:mt-12
-          mx-auto
-        "
-      />
-    </section>
-  );
-}
+    
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {posterKitSeries.map((product) => (
+              <div
+                key={product.id}
+                className="border rounded-lg overflow-hidden hover:shadow-lg transition"
+              >
+                <Image
+                  src={product.image}
+                  alt={product.title}
+                  width={400}
+                  height={500}
+                  className="w-full h-64 object-cover"
+                />
+    
+                <div className="p-4">
+                  <h3 className="font-medium">{product.title}</h3>
+                  <p className="text-sm text-gray-500">{product.artist}</p>
+                  <p className="font-semibold mt-2">₦{product.price.toLocaleString()}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    }
+    

@@ -5,7 +5,7 @@ export default function FaqCard({ icon, title, description }) {
     <Card className="rounded-2xl border bg-[#fafafa] hover:shadow-md transition">
       <CardContent className="p-6 space-y-4">
         {/* Icon */}
-        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-red-50 text-red-500">
+        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-red-50 text-[#FA2020]">
           {icon}
         </div>
 

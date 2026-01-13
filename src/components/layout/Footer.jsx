@@ -71,9 +71,24 @@ export default function Footer() {
                 Contact Us
                 </Link>
             </li>
-            <li>FAQs</li>
-            <li>Shipping & Returns</li>
-            <li>Track Order</li>
+            <li>
+              <Link href="/faqs"
+              className="hover:text-white transition-colors">
+                FAQs
+              </Link>
+            </li>
+            <li>
+              <Link href="/shipping"
+              className="hover:text-white transition-colors">
+                Shipping & Returns
+              </Link>
+            </li>
+            <li>
+              <Link href="/track"
+              className="hover:text-white transition-colors">
+                Track Order
+              </Link>
+            </li>
           </ul>
         </div>
           {/* Information */}

@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { Subheading2, Body2, BodyMD } from "../typography";
+import { Subheading2, Body2, BodyMD, Subheading1,Body1, BodyXS } from "../typography";
 import Link from "next/link";
+import { CircleArrowOutUpRight } from "lucide-react";
 
 export default function YourMood() {
   return (
@@ -103,7 +104,7 @@ export default function YourMood() {
         </div>
 
         {/* ================= SECTION 03 ================= */}
-        <div className="grid grid-cols-12 gap-8 items-start mb-32">
+        <div className="grid grid-cols-12 gap-8 items-start mb-8">
           {/* Text */}
           <div className="col-span-4">
             <BodyMD className="text-[20px] block mb-6">03</BodyMD>
@@ -139,7 +140,30 @@ export default function YourMood() {
             />
           </div>
         </div>
-        {/* ================= CTA ================= */}
+   {/* ================= CTA ================= */}
+<div className="relative w-full h-[220px] md:h-[280px] overflow-hidden rounded-xl">
+  <Image
+    src="/poster/Rectangle 536.jpg"
+    alt="Mood banner"
+    fill
+    priority
+    className="object-cover"
+  />
+
+  {/* Caption overlay */}
+  <div className="absolute inset-0 flex flex-col gap-2 items-center justify-center">
+    <Body1 className="text-white flex items-center gap-3 font-bold">
+  View All Categories
+  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-600">
+    <CircleArrowOutUpRight className="w-4 h-4 text-white" />
+  </span>
+</Body1>
+
+  <BodyXS className="text-white">From Minimal to Maximal, we’ve got your walls covered</BodyXS>
+    
+  </div>
+</div>
+
 
       </div>
     </section>

@@ -23,7 +23,7 @@ export default function Header() {
         <nav className="hidden md:flex items-center gap-10 text-sm font-medium">
           
           <Link
-            href="#"
+            href="/posters"
             className="flex items-center text-[#2D2D2D] gap-1 hover:opacity-70"
           >
             <span>POSTERS</span>

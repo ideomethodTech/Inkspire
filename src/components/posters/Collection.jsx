@@ -1,27 +1,27 @@
 import Image from "next/image";
-import { Headline, Body1 } from "../typography";
+import { Body1 } from "../typography";
 
 const images = [
   "/begin/img3.jpg",
   "/begin/img3.jpg",
- "/begin/img3.jpg",
-"/begin/img3.jpg",
- "/begin/img3.jpg",
- "/begin/img3.jpg",
- "/begin/img3.jpg",
+  "/begin/img3.jpg",
+  "/begin/img3.jpg",
+  "/begin/img3.jpg",
+  "/begin/img3.jpg",
+  "/begin/img3.jpg",
 ];
 
 export default function TiltedBanner() {
-   return (
-    <section className="w-full py-20 overflow-visible">
+  return (
+    <section className="w-full py-20 overflow-hidden bg-white">
       {/* Heading */}
       <Body1 className="text-center mb-12">
         THE COLLECTION DOESN&apos;T END HERE
       </Body1>
 
-      {/* Tilted row container */}
-      <div className="relative w-full pb-20 overflow-visible">
-        <div className="flex gap-6 px-10 transform -rotate-4 origin-center">
+      {/* Tilted carousel */}
+      <div className="relative max-w-7xl mx-auto">
+        <div className="flex gap-6 px-12 -rotate-4 origin-center">
           {images.map((src, idx) => (
             <div
               key={idx}

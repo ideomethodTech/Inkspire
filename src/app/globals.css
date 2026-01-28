@@ -153,3 +153,8 @@ body {
     @apply bg-background text-foreground;
   }
 }
+#__next,
+body {
+  overflow-x: hidden;
+  max-width: 100%;
+}

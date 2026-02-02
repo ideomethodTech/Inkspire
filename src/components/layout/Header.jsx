@@ -46,10 +46,28 @@ export default function Header() {
 
         {/* Icons */}
         <div className="flex items-center gap-5">
-          <Search size={18} />
-          <User size={18} />
+          <Link
+            href="/search"
+            aria-label="Search"
+            className="hover:opacity-70 transition-opacity"
+          >
+            <Search size={18} />
+          </Link>
+          <Link
+            href="/user/profile"
+            aria-label="User account"
+            className="hover:opacity-70 transition-opacity"
+          >
+            <User size={18} />
+          </Link>
           <Heart size={18} />
-          <ShoppingBag size={18} />
+          <Link
+            href="/cart"
+            aria-label="Cart"
+            className="hover:opacity-70 transition-opacity"
+          >
+            <ShoppingBag size={18} />
+          </Link>
         </div>
       </div>
     </header>

@@ -31,13 +31,13 @@ export default function ProductInfo({ product, onAddToCart }) {
   return (
     <div className="flex flex-col gap-6">
       {/* Title */}
-      <Headline className="text-[32px] uppercase tracking-[0.1em]">
+      <Headline className="text-[24px] md:text-[32px] uppercase tracking-[0.1em]">
         {product.title}
       </Headline>
 
       {/* Price */}
       <div className="flex flex-col gap-1">
-        <Body1 className="text-[28px] font-semibold text-[#20262B]">
+        <Body1 className="text-[24px] md:text-[28px] font-semibold text-[#20262B]">
           Rs. {product.price.toLocaleString("en-IN")}
         </Body1>
         <Caption className="text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
@@ -77,11 +77,10 @@ export default function ProductInfo({ product, onAddToCart }) {
               key={size}
               type="button"
               onClick={() => setSelectedSize(size)}
-              className={`px-6 py-2 border-2 uppercase text-[12px] font-medium tracking-[0.16em] transition-all ${
-                selectedSize === size
+              className={`px-6 py-2 border-2 uppercase text-[12px] font-medium tracking-[0.16em] transition-all ${selectedSize === size
                   ? "border-black bg-black text-white"
                   : "border-neutral-300 bg-white text-[#20262B] hover:border-black"
-              }`}
+                }`}
             >
               {size}
             </button>

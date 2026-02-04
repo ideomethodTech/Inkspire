@@ -142,7 +142,7 @@ function ProductCard({ product }) {
         </Caption>
         <div className="mt-auto flex items-center justify-between gap-2">
           <div className="flex flex-col">
-            <Caption className="text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
+            <Caption className="hidden text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D] sm:block">
               24&quot; x 36&quot; print
             </Caption>
             <Caption className="text-[11px] font-semibold text-[#20262B]">
@@ -151,7 +151,7 @@ function ProductCard({ product }) {
           </div>
           <Button
             size="sm"
-            className="h-8 px-3 text-[10px]"
+            className="hidden h-8 px-3 text-[10px] sm:flex"
             onClick={(e) => {
               e.preventDefault();
               // Handle add to cart
@@ -241,33 +241,43 @@ export default function ProductsPage() {
         </div>
       </section>
 
-      <section className="mt-8 flex items-center justify-between gap-4 border-y border-neutral-200 my-3 py-3 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
+      <section className="my-4 flex items-center justify-between border-y border-neutral-200 py-3 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
         <div className="flex items-center gap-2">
-          <span>Sort by</span>
+          <span>SORT BY |</span>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="border-b border-dotted border-neutral-400 bg-transparent pb-[1px] text-[11px] uppercase tracking-[0.16em] text-[#20262B] outline-none"
+            className="cursor-pointer bg-transparent uppercase outline-none"
           >
-            <option value="relevance">Relevance</option>
-            <option value="price_low">Price, low to high</option>
-            <option value="price_high">Price, high to low</option>
+            <option value="relevance">Default</option>
+            <option value="price_low">Price Low</option>
+            <option value="price_high">Price High</option>
           </select>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsFilterOpen(true)}
-            className="inline-flex items-center gap-2"
-          >
-            <span>Filter</span>
-            <span className="text-[14px] leading-none">+</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setIsFilterOpen(true)}
+          className="flex items-center gap-2 transition-colors hover:text-black"
+        >
+          <span>FILTER</span>
+          <span className="text-[14px] leading-none text-black">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="4" y1="21" x2="4" y2="14"></line>
+              <line x1="4" y1="10" x2="4" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12" y2="3"></line>
+              <line x1="20" y1="21" x2="20" y2="16"></line>
+              <line x1="20" y1="12" x2="20" y2="3"></line>
+              <line x1="1" y1="14" x2="7" y2="14"></line>
+              <line x1="9" y1="8" x2="15" y2="8"></line>
+              <line x1="17" y1="16" x2="23" y2="16"></line>
+            </svg>
+          </span>
+        </button>
       </section>
 
       <section className="mt-6">
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-6 lg:grid-cols-3">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

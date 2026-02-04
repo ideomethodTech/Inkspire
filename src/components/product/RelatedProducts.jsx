@@ -22,7 +22,7 @@ export default function RelatedProducts({ products, title = "YOU MAY ALSO LIKE" 
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {products.slice(0, 3).map((product) => (
           <Link
             key={product.id}
@@ -31,7 +31,7 @@ export default function RelatedProducts({ products, title = "YOU MAY ALSO LIKE" 
           >
             <div className="relative aspect-[3/4] overflow-hidden bg-neutral-200">
               <Image
-                src={product.image}
+                src={product.images?.[0] || product.image}
                 alt={product.title}
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

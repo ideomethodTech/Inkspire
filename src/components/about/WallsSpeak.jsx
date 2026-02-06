@@ -5,12 +5,12 @@ import { motion } from "framer-motion";
 import { Headline } from "../typography";
 
 const images = [
-  "/asset/pic-1.webp",
-  "/asset/pic-2.webp",
-  "/asset/pic-3.webp",
-  "/asset/pic-4.webp",
-  "/asset/pic-5.webp",
-  "/asset/pic-6.webp",  
+  "/assets/asset/pic-1.webp",
+  "/assets/asset/pic-2.webp",
+  "/assets/asset/pic-3.webp",
+  "/assets/asset/pic-4.webp",
+  "/assets/asset/pic-5.webp",
+  "/assets/asset/pic-6.webp",  
 ];
 
 export default function WallsSpeak() {

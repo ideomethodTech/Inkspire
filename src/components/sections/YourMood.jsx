@@ -48,14 +48,14 @@ export default function YourMood() {
             </Link>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 w-full order-1 lg:order-2">
               <Image
-                src="/poster/poster-c.jpg"
+                src="/assets/poster/poster-c.jpg"
                 alt="Pop culture posters"
                 width={420}
                 height={500}
                 className="h-[200px] sm:h-[250px] md:h-[300px] w-full sm:w-[50%] lg:w-[420px] object-cover"
               />
               <Image
-                src="/poster/poster-c.jpg"
+                src="/assets/poster/poster-c.jpg"
                 alt="Pop culture posters"
                 width={420}
                 height={520}
@@ -85,14 +85,14 @@ export default function YourMood() {
           <div className="lg:col-span-8 flex flex-col lg:flex-row lg:items-end gap-4 order-2">
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full order-1">
               <Image
-                src="/poster/poster-c.jpg"
+                src="/assets/poster/poster-c.jpg"
                 alt="Motivational posters"
                 width={420}
                 height={500}
                 className="h-[200px] sm:h-[250px] md:h-[300px] w-full sm:w-[50%] lg:w-[420px] object-cover"
               />
               <Image
-                src="/poster/poster-c.jpg"
+                src="/assets/poster/poster-c.jpg"
                 alt="Motivational posters"
                 width={420}
                 height={520}
@@ -128,14 +128,14 @@ export default function YourMood() {
             </Link>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 w-full order-1 lg:order-2">
               <Image
-                src="/poster/poster-c.jpg"
+                src="/assets/poster/poster-c.jpg"
                 alt="Pop culture posters"
                 width={420}
                 height={500}
                 className="h-[200px] sm:h-[250px] md:h-[300px] w-full sm:w-[50%] lg:w-[420px] object-cover"
               />
               <Image
-                src="/poster/poster-c.jpg"
+                src="/assets/poster/poster-c.jpg"
                 alt="Pop culture posters"
                 width={420}
                 height={520}
@@ -148,7 +148,7 @@ export default function YourMood() {
         {/* ================= CTA ================= */}
         <div className="relative w-full h-[180px] sm:h-[220px] md:h-[280px] overflow-hidden rounded-xl">
           <Image
-            src="/poster/Rectangle 536.jpg"
+            src="/assets/poster/Rectangle 536.jpg"
             alt="Mood banner"
             fill
             priority

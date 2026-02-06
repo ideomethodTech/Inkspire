@@ -6,7 +6,7 @@ export default function AboutHero() {
   return (
     <section className="relative h-[60vh] w-full">
       <Image
-        src="/about/@zahirahcharisma.jpg"
+        src="/assets/about/@zahirahcharisma.jpg"
         alt="About Inkspire"
         fill
         className="object-cover"

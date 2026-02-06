@@ -21,7 +21,7 @@ export default function ToBegin() {
         {/* img1 → col 1–2 */}
         <div className="col-span-2 h-[320px] relative">
           <Image
-            src="/begin/img5.jpg"
+            src="/assets/begin/img5.jpg"
             alt=""
             fill
             className="object-cover"
@@ -31,7 +31,7 @@ export default function ToBegin() {
         {/* img2 → col 3 */}
         <div className="h-[320px] relative">
           <Image
-            src="/begin/img2.jpg"
+            src="/assets/begin/img2.jpg"
             alt=""
             fill
             className="object-cover"
@@ -45,7 +45,7 @@ export default function ToBegin() {
         {/* img7 → col 2–3 */}
         <div className="col-span-2 h-[260px] relative">
           <Image
-            src="/begin/img7.jpg"
+            src="/assets/begin/img7.jpg"
             alt=""
             fill
             className="object-cover"
@@ -53,7 +53,7 @@ export default function ToBegin() {
         </div>
         <div className="col-span-2 h-[320px] relative">
           <Image
-            src="/begin/img3.jpg"
+            src="/assets/begin/img3.jpg"
             alt=""
             fill
             className="object-cover"
@@ -63,7 +63,7 @@ export default function ToBegin() {
         {/* img2 → col 3 */}
         <div className="h-[320px] relative">
           <Image
-            src="/begin/img4.jpg"
+            src="/assets/begin/img4.jpg"
             alt=""
             fill
             className="object-cover"
@@ -71,7 +71,7 @@ export default function ToBegin() {
         </div>
          <div className="col-span-2 h-[260px] relative">
           <Image
-            src="/begin/img6.jpg"
+            src="/assets/begin/img6.jpg"
             alt=""
             fill
             className="object-cover"
@@ -79,7 +79,7 @@ export default function ToBegin() {
         </div>
           <div className="col-span-2 h-[320px] relative">
           <Image
-            src="/begin/img9.jpg"
+            src="/assets/begin/img9.jpg"
             alt=""
             fill
             className="object-cover"
@@ -89,7 +89,7 @@ export default function ToBegin() {
         {/* img2 → col 3 */}
         <div className="h-[320px] relative">
           <Image
-            src="/begin/img8.jpg"
+            src="/assets/begin/img8.jpg"
             alt=""
             fill
             className="object-cover"

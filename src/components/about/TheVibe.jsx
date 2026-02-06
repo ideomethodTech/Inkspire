@@ -22,7 +22,7 @@ export default function TheVibe() {
 <div className="relative w-full h-[520px] overflow-hidden">
   <div className="relative w-full h-full scale-70 md:scale-85">
     <Image
-      src="/about/vibei.jpg"
+      src="/assets/about/vibei.jpg"
       alt="Vibe"
       fill
       className="object-cover rounded-md"
@@ -38,7 +38,7 @@ export default function TheVibe() {
           <div className="relative w-full h-[240px]">
             <div className="relative w-full h-full scale-90 md:scale-100">
             <Image
-              src="/about/vibeii.jpg"
+              src="/assets/about/vibeii.jpg"
               alt="Vibe detail"
               fill
               className="object-cover"
@@ -48,7 +48,7 @@ export default function TheVibe() {
 
           <div className="relative w-full h-[240px]">
             <Image
-              src="/about/vibeiii.jpg"
+              src="/assets/about/vibeiii.jpg"
               alt="Vibe detail"
               fill
               className="object-cover"

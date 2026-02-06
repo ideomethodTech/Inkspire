@@ -2,13 +2,13 @@ import Image from "next/image";
 import { Body1 } from "../typography";
 
 const images = [
-  "/begin/img3.jpg",
-  "/begin/img3.jpg",
-  "/begin/img3.jpg",
-  "/begin/img3.jpg",
-  "/begin/img3.jpg",
-  "/begin/img3.jpg",
-  "/begin/img3.jpg",
+  "/assets/begin/img3.jpg",
+  "/assets/begin/img3.jpg",
+  "/assets/begin/img3.jpg",
+  "/assets/begin/img3.jpg",
+  "/assets/begin/img3.jpg",
+  "/assets/begin/img3.jpg",
+  "/assets/begin/img3.jpg",
 ];
 
 export default function TiltedBanner() {

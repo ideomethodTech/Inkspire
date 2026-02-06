@@ -5,13 +5,13 @@ import Image from "next/image";
 import { Headline } from "../typography";
 
 const moods = [
-  { id: 1, title: "Nature Drive", image: "/asset/pic-1.webp" },
-  { id: 2, title: "Escape & Breathe", image: "/asset/pic-2.webp" },
-  { id: 3, title: "Sporty Drive", image: "/asset/pic-3.webp" },
-  { id: 4, title: "Vintage Camera", image: "/asset/pic-4.webp" },
-  { id: 5, title: "Into the Woods", image: "/asset/pic-5.webp" },
-   { id: 1, title: "Nature Drive", image: "/asset/pic-1.webp" },
-   { id: 3, title: "Sporty Drive", image: "/asset/pic-3.webp" },
+  { id: 1, title: "Nature Drive", image: "/assets/asset/pic-1.webp" },
+  { id: 2, title: "Escape & Breathe", image: "/assets/asset/pic-2.webp" },
+  { id: 3, title: "Sporty Drive", image: "/assets/asset/pic-3.webp" },
+  { id: 4, title: "Vintage Camera", image: "/assets/asset/pic-4.webp" },
+  { id: 5, title: "Into the Woods", image: "/assets/asset/pic-5.webp" },
+   { id: 1, title: "Nature Drive", image: "/assets/asset/pic-1.webp" },
+   { id: 3, title: "Sporty Drive", image: "/assets/asset/pic-3.webp" },
 
 ];
 
@@ -38,7 +38,7 @@ export default function MoodToday() {
       {/* 🔹 Top Banner */}
       <div className="relative w-full h-[220px] md:h-[280px]">
         <Image
-          src="/poster/Rectangle 536.jpg"
+          src="/assets/poster/Rectangle 536.jpg"
           alt="Mood banner"
           fill
           priority

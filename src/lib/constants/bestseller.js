@@ -7,13 +7,13 @@ export const BESTSELLER_CONTENT = {
   },
 };
 export const BESTSELLER_IMAGES = [
-  "/asset/pic-1.webp",
-  "/asset/pic-2.webp",
-  "/asset/pic-3.webp",
-  "/asset/pic-4.webp",
-  "/asset/pic-5.webp",
-  "/asset/pic-6.webp",
-  "/asset/pic-7.webp",
-  "/asset/pic-8.webp",
-  "/asset/pic-9.webp",
+  "/assets/asset/pic-1.webp",
+  "/assets/asset/pic-2.webp",
+  "/assets/asset/pic-3.webp",
+  "/assets/asset/pic-4.webp",
+  "/assets/asset/pic-5.webp",
+  "/assets/asset/pic-6.webp",
+  "/assets/asset/pic-7.webp",
+  "/assets/asset/pic-8.webp",
+  "/assets/asset/pic-9.webp",
 ];

@@ -9,7 +9,7 @@ return (
 {/* LEFT — BIG IMAGE */}
 <div className="relative w-full h-[500px] md:-ml-24">
 <Image
-src="/about/whoweareii.jpg"
+src="/assets/about/whoweareii.jpg"
 alt="Who we are"
 fill
 className="object-cover rounded-md"
@@ -36,7 +36,7 @@ priority
 {/* SMALL IMAGE */}
 <div className="relative w-full h-[280px] md:translate-x-10">
 <Image
-src="/about/whowearei.jpg"
+src="/assets/about/whowearei.jpg"
 alt="Our creative space"
 fill
 className="object-cover"

@@ -45,7 +45,7 @@ function Slide({ frames, slideKey }) {
         <Image
           key={`${slideKey}-${frame.id ?? index}`}
           src={frame.src}
-          alt=""
+          alt={frame.alt}
           width={frame.width}
           height={frame.height}
           className={frame.className}

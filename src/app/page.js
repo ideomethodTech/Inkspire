@@ -9,9 +9,10 @@ import Testimonials from "@/components/sections/Testimonials";
 
 
 
+
 export default function HomePage() {
   return (
-    <>    
+    <div className="overflow-x-hidden">    
       <Hero />
       <Bestseller />
       <PosterKit />
@@ -19,7 +20,6 @@ export default function HomePage() {
       <ShopWithUs />
       <NewArrivals />
       <Testimonials />
-     
-    </>
+    </div>
   );
 }

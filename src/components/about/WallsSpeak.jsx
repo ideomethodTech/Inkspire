@@ -3,15 +3,7 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Headline } from "../typography";
-
-const images = [
-  "/assets/asset/pic-1.webp",
-  "/assets/asset/pic-2.webp",
-  "/assets/asset/pic-3.webp",
-  "/assets/asset/pic-4.webp",
-  "/assets/asset/pic-5.webp",
-  "/assets/asset/pic-6.webp",  
-];
+import { wallSpeakImages } from "@/lib/constants/about";
 
 export default function WallsSpeak() {
   return (
@@ -27,9 +19,9 @@ export default function WallsSpeak() {
         dragConstraints={{ left: -400, right: 0 }}
         whileTap={{ cursor: "grabbing" }}
       >
-        {images.map((src, index) => (
+        {wallSpeakImages.map((img) => (
           <motion.div
-            key={index}
+            key={img.id}
             className="
               relative
               flex-shrink-0
@@ -40,7 +32,7 @@ export default function WallsSpeak() {
             "
           >
             <Image
-              src={src}
+              src={img.src}
               alt="Wall art"
               fill
               className="object-cover rounded-md"

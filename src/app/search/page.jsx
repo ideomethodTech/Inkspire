@@ -31,7 +31,7 @@ function SearchCard({ product }) {
   return (
     <Link href={`/products/${product.id}`} className="group">
       <div className="relative overflow-hidden rounded-md bg-neutral-100">
-        <div className="aspect-[4/5]">
+        <div className="aspect-4/5">
           <img
             src={product.image}
             alt={product.title}

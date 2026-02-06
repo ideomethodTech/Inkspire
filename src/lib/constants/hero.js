@@ -13,6 +13,7 @@ export const HERO_FRAMES_BASE = [
   {
     key: "frame-f",
     src: "/assets/asset/Frame-f.jpg",
+    alt: "hero frame f",
     width: 340,
     height: 207,
     className:
@@ -21,6 +22,7 @@ export const HERO_FRAMES_BASE = [
   {
     key: "frame-i",
     src: "/assets/asset/Frame-i.jpg",
+    alt: "hero frame i",
     width: 250,
     height: 220,
     className:
@@ -29,6 +31,7 @@ export const HERO_FRAMES_BASE = [
   {
     key: "frame-c",
     src: "/assets/asset/Frame-c.jpg",
+    alt: "hero frame c",
     width: 185,
     height: 180,
     className:
@@ -37,6 +40,7 @@ export const HERO_FRAMES_BASE = [
   {
     key: "frame-d",
     src: "/assets/asset/Frame-d.jpg",
+    alt: "hero frame d",
     width: 398,
     height: 335,
     className:
@@ -45,6 +49,7 @@ export const HERO_FRAMES_BASE = [
   {
     key: "frame-e",
     src: "/assets/asset/Frame-e.jpg",
+    alt: "hero frame e",
     width: 185,
     height: 209,
     className:
@@ -53,6 +58,7 @@ export const HERO_FRAMES_BASE = [
   {
     key: "frame-b",
     src: "/assets/asset/Frame-b.jpg",
+    alt: "hero frame b",
     width: 546,
     height: 295,
     className:
@@ -61,6 +67,7 @@ export const HERO_FRAMES_BASE = [
   {
     key: "frame-a",
     src: "/assets/asset/Frame-a.jpg",
+    alt: "hero frame a",
     width: 400,
     height: 204,
     className:
@@ -69,6 +76,7 @@ export const HERO_FRAMES_BASE = [
    {
     key: "frame-g",
     src: "/assets/asset/Frame-g.jpg",
+    alt: "hero frame g",
     width: 162,
     height: 220,
     className:
@@ -78,6 +86,7 @@ export const HERO_FRAMES_BASE = [
   {
     key: "frame-h",
     src: "/assets/asset/Frame-h.png",
+    alt: "hero frame h",
     width: 128,
     height: 128,
     className:
@@ -89,14 +98,16 @@ export const HERO_FRAMES_BASE_2 = [
   {
     key: "frame-ii",
     src: "/assets/asset/frame-ii.jpg",
-    width: 350,
+    alt: "hero frame ii",
     height: 207,
+    width: 350,
     className:
       "absolute top-[-180px]  left-[-60px] scale-75 sm:scale-90 lg:scale-70 hidden md:block",
   },
   {
     key: "frame-j",
     src: "/assets/asset/frame-j.jpg",
+    alt: "hero frame j",
     width: 250,
     height: 220,
     className:
@@ -105,6 +116,7 @@ export const HERO_FRAMES_BASE_2 = [
   {
     key: "frame-k",
     src: "/assets/asset/frame-k.png",
+    alt: "hero frame k",
     width: 185,
     height: 180,
     className:
@@ -113,6 +125,7 @@ export const HERO_FRAMES_BASE_2 = [
   {
     key: "frame-l",
     src: "/assets/asset/frame-l.jpg",
+    alt: "hero frame l",
     width: 398,
     height: 335,
     className:
@@ -121,6 +134,7 @@ export const HERO_FRAMES_BASE_2 = [
   {
     key: "frame-m",
     src: "/assets/asset/frame-m.jpg",
+    alt: "hero frame m",
     width: 185,
     height: 209,
     className:
@@ -129,6 +143,7 @@ export const HERO_FRAMES_BASE_2 = [
   {
     key: "frame-n",
     src: "/assets/asset/frame-n.jpg",
+    alt: "hero frame n",
     width: 546,
     height: 295,
     className:
@@ -137,6 +152,7 @@ export const HERO_FRAMES_BASE_2 = [
   {
     key: "frame-o",
     src: "/assets/asset/frame-o.png",
+    alt: "hero frame o",
     width: 200,
     height: 204,
     className:
@@ -145,6 +161,7 @@ export const HERO_FRAMES_BASE_2 = [
   {
     key: "frame-p",
     src: "/assets/asset/frame-p.png",
+    alt: "hero frame p",
     width: 162,
     height: 220,
     className:
@@ -154,6 +171,7 @@ export const HERO_FRAMES_BASE_2 = [
   {
     key: "frame-q",
     src: "/assets/asset/frame-q.jpg",
+    alt: "hero frame q",
     width: 228,
     height: 128,
     className:

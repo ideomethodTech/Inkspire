@@ -152,9 +152,23 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+  @layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
 }
-#__next,
-body {
-  overflow-x: hidden;
+
+}
+html,
+body,
+#__next {
+  width: 100%;
   max-width: 100%;
+  overflow-x: hidden;
 }

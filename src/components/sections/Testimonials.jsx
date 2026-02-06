@@ -54,7 +54,7 @@ export default function Testimonials() {
     {/* Avatar */}
     <div className="absolute right-10 top-10">
       <Image
-        src="/image-kira.jpg"
+        src="/assets/image-kira.jpg"
         alt="Avatar"
         width={56}
         height={56}
@@ -89,7 +89,7 @@ export default function Testimonials() {
   <div className="absolute right-[-220px] flex gap-6">
     {/* near right (fully visible) */}
     <Image
-      src="/image-patrick.jpg"
+      src="/assets/image-patrick.jpg"
       alt="Reviewer"
       width={260}
       height={320}
@@ -98,7 +98,7 @@ export default function Testimonials() {
 
     {/* far right (cut off) */}
     <Image
-      src="/image-daniel.jpg"
+      src="/assets/image-daniel.jpg"
       alt="Reviewer"
       width={260}
       height={320}

@@ -9,6 +9,8 @@ export default function HeroContent() {
   const { headline, subtitle } = HERO_CONTENT;
   const reduced = useReducedMotion();
 
+
+
   return (
     <div className="relative z-10 flex min-h-screen flex-col items-center justify-center text-center px-6">
       

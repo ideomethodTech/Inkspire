@@ -5,9 +5,12 @@ import { Headline, Body2 } from "../typography";
 import BestsellerCarousel from "../bestseller/BestsellerCarousel";
 import { BESTSELLER_IMAGES } from "@/lib/constants/bestseller";
 import Link from "next/link";
+import Skeleton from "@/components/ui/Skeleton";
+
 
 
 export default function Bestseller() {
+  const isLoading = false;
   return (
     <section className="bg-white py-16 md:py-24">
       {/* title & captions */}
@@ -31,7 +34,24 @@ export default function Bestseller() {
         </div>
       </div>
 
-      <BestsellerCarousel images={BESTSELLER_IMAGES} />
+   
+      {isLoading ? (
+        <div className="flex gap-4 px-6 overflow-hidden">
+          {Array(4)
+            .fill(0)
+            .map((_, i) => (
+              <Skeleton
+                key={i}
+                variant="rectangle"
+                width="w-[220px]"
+                height="h-[300px]"
+                className="flex-shrink-0"
+              />
+            ))}
+        </div>
+      ) : (
+        <BestsellerCarousel images={BESTSELLER_IMAGES} />
+      )}
     </section>
   );
 }

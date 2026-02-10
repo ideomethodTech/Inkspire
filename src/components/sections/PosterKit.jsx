@@ -4,12 +4,14 @@ import { Headline } from "../typography";
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { MOCK_PRODUCTS } from "@/lib/constants/products";
+import Skeleton from "../ui/Skeleton";
 
 
 export default function PosterKitSeries() {
 
     const posterKitSeries = MOCK_PRODUCTS.slice(0, 3);
 
+    const isLoading = false;
   return (
     <section className="bg-[#F7F7F7] py-20 md:py-28 xl:py-32">
       {/* Header */}
@@ -33,30 +35,49 @@ export default function PosterKitSeries() {
     <ArrowUpRight size={12} strokeWidth={1.5} />
   </span>
 </Link>
-      </div>
-    
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {posterKitSeries.map((product) => (
-              <div
-                key={product.id}
-                className="border rounded-lg overflow-hidden hover:shadow-lg transition"
-              >
-                <Image
-                  src={product.image}
-                  alt={product.title}
-                  width={400}
-                  height={500}
-                  className="w-full h-64 object-cover"
-                />
-    
-                <div className="p-4">
-                  <h3 className="font-medium">{product.title}</h3>
-                  <p className="text-sm text-gray-500">{product.artist}</p>
-                  <p className="font-semibold mt-2">₦{product.price.toLocaleString()}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+</div>
+
+<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+{isLoading
+? Array(3)
+.fill(0)
+.map((_, i) => (
+<div
+key={i}
+className="border rounded-lg overflow-hidden"
+>
+<Skeleton height="h-64" />
+
+<div className="p-4 space-y-2">
+  <Skeleton variant="text" width="w-3/4" />
+  <Skeleton variant="text" width="w-1/2" height="h-3" />
+  <Skeleton variant="text" width="w-1/3" />
+</div>
+</div>
+))
+: posterKitSeries.map((product) => (
+<div
+key={product.id}
+className="border rounded-lg overflow-hidden hover:shadow-lg transition"
+>
+<Image
+src={product.image}
+alt={product.title}
+width={400}
+height={500}
+className="w-full h-64 object-cover"
+/>
+
+<div className="p-4">
+<h3 className="font-medium">{product.title}</h3>
+<p className="text-sm text-gray-500">{product.artist}</p>
+<p className="font-semibold mt-2">
+  ₦{product.price.toLocaleString()}
+</p>
+</div>
+</div>
+))}
+</div>
         </section>
       );
     }

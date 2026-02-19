@@ -21,7 +21,7 @@ export default function ProfilePage() {
     <div className="flex-1 space-y-8">
       {/* Profile Card */}
       <section className="rounded-lg bg-white p-8 shadow-sm">
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between">
           <Subheading2 className="text-[24px] font-semibold uppercase tracking-[0.1em] text-[#20262B]">
             My Profile
           </Subheading2>
@@ -34,51 +34,54 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {/* User Details Grid */}
-        <div className="mb-8 grid gap-8 md:grid-cols-3">
-          <div>
-            <Caption className="mb-2 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
-              Full Name
-            </Caption>
-            <Body1 className="text-[16px] font-medium text-[#20262B]">Samantha Smith</Body1>
+        {/* User Details - Two Column Layout */}
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          {/* Left Column - Personal Information */}
+          <div className="space-y-6">
+            <div>
+              <Caption className="mb-2 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
+                Full Name
+              </Caption>
+              <Body1 className="text-[14px] font-medium text-[#20262B]">Samantha Smith</Body1>
+            </div>
+            <div>
+              <Caption className="mb-2 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
+                Mobile Number
+              </Caption>
+              <Body1 className="text-[14px] font-medium text-[#20262B]">+123 456 7890</Body1>
+            </div>
+            <div>
+              <Caption className="mb-2 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
+                Date of Birth
+              </Caption>
+              <Body1 className="text-[14px] font-medium text-[#20262B]">12/12/1990</Body1>
+            </div>
           </div>
-          <div>
-            <Caption className="mb-2 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
-              Mobile Number
-            </Caption>
-            <Body1 className="text-[16px] font-medium text-[#20262B]">+123 456 7890</Body1>
-          </div>
-          <div>
-            <Caption className="mb-2 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
-              Date of Birth
-            </Caption>
-            <Body1 className="text-[16px] font-medium text-[#20262B]">12/12/1990</Body1>
-          </div>
-        </div>
 
-        {/* Contact Verification */}
-        <div className="space-y-3">
-          <VerificationBox
-            icon={Mail}
-            iconColor="text-green-500"
-            label="Email"
-            value="samantha@gmail.com"
-            status="Verified"
-            statusColor="bg-green-100 text-green-700"
-          />
-          <VerificationBox
-            icon={Phone}
-            iconColor="text-orange-500"
-            label="Mobile"
-            value="Mobile"
-            status="Not Verified"
-            statusColor="bg-orange-100 text-orange-700"
-          />
+          {/* Right Column - Contact Verification */}
+          <div className="space-y-3">
+            <VerificationBox
+              icon={Mail}
+              iconColor="text-green-500"
+              label="Email"
+              value="samantha@gmail.com"
+              status="Verified"
+              statusColor="bg-green-100 text-green-700"
+            />
+            <VerificationBox
+              icon={Phone}
+              iconColor="text-orange-500"
+              label="Mobile"
+              value="Mobile"
+              status="Not Verified"
+              statusColor="bg-orange-100 text-orange-700"
+            />
+          </div>
         </div>
       </section>
 
       {/* Addresses */}
-      <section className="rounded-lg bg-white p-8 shadow-sm">
+      <section className="rounded-lg bg-white p-6 shadow-sm">
         <div className="mb-6">
           <Subheading2 className="text-[24px] font-semibold uppercase tracking-[0.1em] text-[#20262B]">
             My Addresses
@@ -104,7 +107,7 @@ export default function ProfilePage() {
 
 function VerificationBox({ icon: Icon, iconColor, label, value, status, statusColor }) {
   return (
-    <div className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-4 py-3">
+    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
       <div className="flex items-center gap-3">
         <Icon size={20} className={iconColor} />
         <div>
@@ -123,7 +126,7 @@ function VerificationBox({ icon: Icon, iconColor, label, value, status, statusCo
 
 function AddressCard({ address }) {
   return (
-    <div className="relative rounded-lg border border-neutral-200 bg-white p-6">
+    <div className="relative rounded-lg border border-gray-200 bg-white p-6">
       {/* Edit/Delete Icons */}
       <div className="absolute right-4 top-4 flex gap-2">
         <button

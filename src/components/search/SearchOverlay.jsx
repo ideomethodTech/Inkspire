@@ -75,7 +75,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
 
             {/* Overlay Panel */}
             <div
-                className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white shadow-2xl transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"
+                className={`fixed inset-y-0 right-0 z-50 w-[70%] max-w-md bg-white shadow-2xl transition-transform duration-300 md:w-full ${isOpen ? "translate-x-0" : "translate-x-full"
                     }`}
             >
                 <div className="flex h-full flex-col">

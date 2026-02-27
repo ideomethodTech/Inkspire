@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, ShoppingBag, Tag, Wallet, CreditCard } from "lucide-react";
+import { User, ShoppingBag, Tag, Wallet, CreditCard, LogOut } from "lucide-react";
 import clsx from "clsx";
 import { Caption, Subheading2 } from "@/components/typography";
 
@@ -39,18 +39,27 @@ export default function AccountSidebar() {
               key={item.href}
               href={item.href}
               className={clsx(
-                "flex items-center gap-3 rounded-md px-4 py-3 text-[14px] font-medium uppercase tracking-[0.08em] transition-colors",
+                "relative flex w-full items-center gap-3 rounded-md px-4 py-3 text-[14px] font-medium uppercase tracking-[0.08em] transition-colors",
                 active
-                  ? "bg-[#E11B1B] text-white"
+                  ? "text-[#E11B1B]"
                   : "text-[#6D6D6D] hover:bg-neutral-100"
               )}
             >
-              <Icon size={18} className={active ? "text-white" : "text-[#6D6D6D]"} />
+              {active && (
+                <div className="absolute left-0 top-0 h-full w-1 rounded-r-full bg-[#E11B1B]" />
+              )}
+              <Icon size={18} className={active ? "text-[#E11B1B]" : "text-[#6D6D6D]"} />
               <span>{item.label}</span>
             </Link>
           );
         })}
       </nav>
+
+      {/* Logout Button */}
+      <button className="flex w-full items-center gap-3 rounded-md px-4 py-3 text-[14px] font-medium uppercase tracking-[0.08em] text-[#6D6D6D] transition-colors hover:bg-neutral-100">
+        <LogOut size={18} className="text-[#6D6D6D]" />
+        <span>Logout</span>
+      </button>
     </aside>
   );
 }

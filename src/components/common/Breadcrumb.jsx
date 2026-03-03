@@ -7,7 +7,7 @@ export default function Breadcrumb({ items }) {
   return (
     <nav className="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
       {items.map((item, index) => (
-        <div key={index} className="flex items-center gap-2">
+        <div key={item.href || item.label} className="flex items-center gap-2">
           {item.href ? (
             <Link
               href={item.href}

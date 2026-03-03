@@ -16,7 +16,7 @@ export default function PosterKitSeries() {
     <section className="bg-[#F7F7F7] py-20 md:py-28 xl:py-32">
       {/* Header */}
       <div className="mb-8 md:mb-12 px-4 md:px-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <Headline className="font-medium  font-medium">POSTERKIT SERIES</Headline>
+        <Headline className="font-medium">POSTERKIT SERIES</Headline>
       
 <Link
   href="/products"

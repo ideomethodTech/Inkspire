@@ -10,7 +10,7 @@ export default function ProductCard({ product }) {
       href={`/products/${product.id}`}
       className="group flex flex-col overflow-hidden rounded-md bg-white shadow-[0_2px_6px_rgba(0,0,0,0.08)] transition-transform hover:scale-[1.02]"
     >
-      <div className="relative aspect-[3/4] overflow-hidden bg-neutral-200">
+      <div className="relative aspect-3/4 overflow-hidden bg-neutral-200">
         <img
           src={product.image}
           alt={product.title}

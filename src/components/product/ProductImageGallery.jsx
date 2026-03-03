@@ -29,7 +29,7 @@ export default function ProductImageGallery({ images, title }) {
           {imageList.map((img, index) => (
             <div
               key={index}
-              className="relative aspect-[3/4] min-w-full flex-shrink-0 snap-center bg-neutral-100"
+              className="relative aspect-3/4 min-w-full shrink-0 snap-center bg-neutral-100"
             >
               <Image
                 src={img}

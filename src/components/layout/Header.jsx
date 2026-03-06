@@ -15,6 +15,8 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false); 
   const [openMenu, setOpenMenu] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  
 
 
 return (
@@ -430,14 +432,22 @@ className="hover:opacity-70 transition-opacity outline-none"
 >
 <Search size={18} />
 </button>
-<Link
-href="/user/profile"
-aria-label="User account"
-className="hover:opacity-70 transition-opacity"
+<button
+  type="button"
+  onClick={() => {
+    if (user) {
+      // If logged in, go to profile
+      window.location.href = "/user/profile";
+    } else {
+      // If not logged in, show AuthModal
+      setShowAuth(true);
+    }
+  }}
+  aria-label="User account"
+  className="hover:opacity-70 transition-opacity"
 >
-<User size={18} />
-</Link>
-<Heart size={18} />
+  <User size={18} />
+</button><Heart size={18} />
 <Link
 href="/cart"
 aria-label="Cart"
@@ -456,6 +466,17 @@ className="hover:opacity-70 transition-opacity"
 )}
 
 <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+  {/* Auth Modal */}
+  {showAuth && (
+    <AuthModal
+      onClose={() => setShowAuth(false)}
+      onLoginSuccess={(loggedInUser) => {
+        setUser(loggedInUser); // update state
+        setShowAuth(false);    // close modal
+        window.location.href = "/user/profile"; // redirect
+      }}
+    />
+  )}
 </>
 );
 }

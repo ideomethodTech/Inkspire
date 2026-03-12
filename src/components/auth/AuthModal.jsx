@@ -5,31 +5,21 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { loginUser as realLoginUser } from "@/api/auth"; // keep this import
+import { loginUser as realLoginUser } from "@/api/auth";
+import { auth } from "@/lib/firebase";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+} from "firebase/auth";
 
 export default function AuthModal({ initialMode = "email", onClose }) {
   const [mode, setMode] = useState(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // --- TEMPORARY override for testing login redirect ---
-  const loginUser = async (_idToken, email) => {
-    return {
-      token: "fake-jwt-token",
-      user: { email, userId: "123", role: "user" },
-    };
-  };
-
-  // --- Simulate API check for existing user ---
-  const checkEmail = async (email) => {
-    // Replace this with real API later: /auth/check-email
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ isExistingUser: email === "test@test.com" });
-      }, 500);
-    });
-  };
+  const googleProvider = new GoogleAuthProvider();
 
   // --- Handle "Continue" from email step ---
   const handleEmailContinue = async () => {
@@ -37,8 +27,11 @@ export default function AuthModal({ initialMode = "email", onClose }) {
     setLoading(true);
 
     try {
-      const response = await checkEmail(email);
-      setMode(response.isExistingUser ? "signin" : "signup");
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/check-email?email=${email}`
+      );
+      const data = await response.json();
+      setMode(data.isExistingUser ? "signin" : "signup");
     } catch (err) {
       console.error("Error checking email:", err);
       alert("Something went wrong. Try again.");
@@ -47,23 +40,28 @@ export default function AuthModal({ initialMode = "email", onClose }) {
     }
   };
 
-  // --- Handle actual login ---
+  // --- Handle login ---
   const handleLogin = async () => {
     if (!password) return alert("Please enter your password");
-
     setLoading(true);
+
     try {
-      // Use temporary loginUser for now
-      const data = await loginUser("dummy-token", email);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      const idToken = await userCredential.user.getIdToken();
+      const data = await realLoginUser(idToken);
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      // Redirect to user profile
       window.location.href = "/user/profile";
     } catch (error) {
       console.error("Login failed:", error);
-      alert("Login failed. Check console for details.");
+      alert(error.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -72,24 +70,53 @@ export default function AuthModal({ initialMode = "email", onClose }) {
   // --- Handle signup ---
   const handleSignup = async () => {
     if (!password) return alert("Please enter a password");
-
     setLoading(true);
+
     try {
-      // Here you can call your real signup API later
-      const data = await loginUser("dummy-token", email);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      const idToken = await userCredential.user.getIdToken();
+      const data = await realLoginUser(idToken);
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      // Redirect after signup
       window.location.href = "/user/profile";
     } catch (error) {
       console.error("Signup failed:", error);
-      alert("Signup failed. Check console for details.");
+      alert(error.message || "Signup failed");
     } finally {
       setLoading(false);
     }
   };
+
+  const handleGoogleLogin = async () => {
+
+     console.log("Google login clicked");
+  setLoading(true);
+
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+
+    const idToken = await result.user.getIdToken();
+
+    const data = await realLoginUser(idToken);
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    window.location.href = "/user/profile";
+  } catch (error) {
+    console.error("Google login failed:", error);
+    alert(error.message || "Google login failed");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -98,41 +125,44 @@ export default function AuthModal({ initialMode = "email", onClose }) {
           <X className="h-5 w-5" />
         </button>
 
-       {/* EMAIL STEP*/}
-{mode === "email" && (
-  <>
-    <h2 className="mb-2 text-sm font-semibold uppercase">
-      Sign in / Create an account
-    </h2>
-    <p className="mb-6 text-sm text-muted-foreground">
-      Enter your email to sign in or create a new account.
-    </p>
+        {/* EMAIL STEP */}
+        {mode === "email" && (
+          <>
+            <h2 className="mb-2 text-sm font-semibold uppercase">
+              Sign in / Create an account
+            </h2>
+            <p className="mb-6 text-sm text-muted-foreground">
+              Enter your email to sign in or create a new account.
+            </p>
 
-    <label className="mb-2 block text-sm font-medium">Email *</label>
-    <Input
-      value={email}
-      onChange={(e) => setEmail(e.target.value)}
-    />
+            <label className="mb-2 block text-sm font-medium">Email *</label>
+            <Input value={email} onChange={(e) => setEmail(e.target.value)} />
 
-    <Button
-      className="mt-6 w-full"
-      onClick={handleEmailContinue} // <--- use the real function with API/email check
-      disabled={loading}
-    >
-      {loading ? "Checking..." : "Continue"}
-    </Button>
+            <Button
+              className="mt-6 w-full"
+              onClick={handleEmailContinue}
+              disabled={loading}
+            >
+              {loading ? "Checking..." : "Continue"}
+            </Button>
 
-    <div className="my-6 flex items-center gap-2 text-xs text-muted-foreground">
-      <div className="h-px flex-1 bg-border" />
-      OR
-      <div className="h-px flex-1 bg-border" />
-    </div>
+            <div className="my-6 flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="h-px flex-1 bg-border" />
+              OR
+              <div className="h-px flex-1 bg-border" />
+            </div>
 
-    <Button variant="outline" className="w-full">
-      Continue with Google
-    </Button>
-  </>
-)}
+           <Button
+  variant="outline"
+  className="w-full"
+  onClick={handleGoogleLogin}
+  disabled={loading}
+>
+  Continue with Google
+</Button>
+          </>
+        )}
+
         {/* SIGN IN */}
         {mode === "signin" && (
           <>
@@ -145,67 +175,76 @@ export default function AuthModal({ initialMode = "email", onClose }) {
               onChange={(e) => setPassword(e.target.value)}
               className="mt-2"
             />
-            <Button className="mt-6 w-full" onClick={handleLogin} disabled={loading}>
+            <Button
+              className="mt-6 w-full"
+              onClick={handleLogin}
+              disabled={loading}
+            >
               {loading ? "Signing in..." : "Continue"}
             </Button>
           </>
         )}
 
         {/* SIGN UP */}
-{mode === "signup" && (
-  <>
-    <h2 className="mb-2 text-sm font-semibold uppercase">Create an account</h2>
-    <p className="mb-6 text-sm text-muted-foreground">
-      Create your account to save posters, track orders, and manage your profile
-    </p>
+        {mode === "signup" && (
+          <>
+            <h2 className="mb-2 text-sm font-semibold uppercase">
+              Create an account
+            </h2>
+            <p className="mb-6 text-sm text-muted-foreground">
+              Create your account to save posters, track orders, and manage your
+              profile
+            </p>
 
-    {/* Email */}
-    <label className="mb-2 block text-sm font-medium">Email *</label>
-    <Input value={email} disabled />
+            {/* Email */}
+            <label className="mb-2 block text-sm font-medium">Email *</label>
+            <Input value={email} disabled />
 
-    {/* Password */}
-    <label className="mt-4 mb-2 block text-sm font-medium">Create a password *</label>
-    <Input
-      type="password"
-      placeholder="Create password"
-      value={password}
-      onChange={(e) => setPassword(e.target.value)}
-    />
-    <p className="mt-1 text-xs text-muted-foreground">
-      8–25 characters, 1 number, 1 uppercase, 1 lowercase
-    </p>
+            {/* Password */}
+            <label className="mt-4 mb-2 block text-sm font-medium">
+              Create a password *
+            </label>
+            <Input
+              type="password"
+              placeholder="Create password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              8–25 characters, 1 number, 1 uppercase, 1 lowercase
+            </p>
 
-    {/* Date of birth */}
-    <label className="mt-4 mb-2 block text-sm font-medium">Date of birth *</label>
-    <Input
-      placeholder="MM / DD / YYYY"
-    />
+            {/* Date of birth */}
+            <label className="mt-4 mb-2 block text-sm font-medium">
+              Date of birth *
+            </label>
+            <Input placeholder="MM / DD / YYYY" />
 
-    {/* Newsletter checkbox */}
-    <div className="mt-4 flex items-center gap-2">
-      <Checkbox />
-      <span className="text-xs">Sign up for email updates and offers</span>
-    </div>
+            {/* Newsletter checkbox */}
+            <div className="mt-4 flex items-center gap-2">
+              <Checkbox />
+              <span className="text-xs">
+                Sign up for email updates and offers
+              </span>
+            </div>
 
-    {/* Signup button */}
-    <Button
-      className="mt-6 w-full"
-      onClick={handleSignup}
-      disabled={loading}
-    >
-      {loading ? "Creating..." : "Create account"}
-    </Button>
+            <Button
+              className="mt-6 w-full"
+              onClick={handleSignup}
+              disabled={loading}
+            >
+              {loading ? "Creating..." : "Create account"}
+            </Button>
 
-    {/* Sign in link */}
-    <Button
-      variant="outline"
-      className="mt-3 w-full"
-      onClick={() => setMode("signin")}
-    >
-      Already have an account? Sign in
-    </Button>
-  </>
-)}
+            <Button
+              variant="outline"
+              className="mt-3 w-full"
+              onClick={() => setMode("signin")}
+            >
+              Already have an account? Sign in
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

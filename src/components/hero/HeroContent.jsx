@@ -1,19 +1,44 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import { HERO_CONTENT } from "@/lib/constants/hero";
 import { HeadlineXL, Body2 } from "../typography";
 import ArrowButton from "@/components/ui/ArrowButton";
 
 export default function HeroContent() {
-  const { headline, subtitle } = HERO_CONTENT;
   const reduced = useReducedMotion();
 
+  const [banner, setBanner] = useState(null);
 
+  useEffect(() => {
+    const fetchBanner = async () => {
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/content/hero`
+        );
+
+        const data = res.data;
+
+        if (data?.data?.banners?.length > 0) {
+          setBanner(data.data.banners[0]);
+        }
+      } catch (err) {
+        console.error("Banner fetch failed:", err);
+      }
+    };
+
+    fetchBanner();
+  }, []);
+
+  // Fallback to constants if API empty
+  const headline = banner?.headline || HERO_CONTENT.headline;
+  const subtitle = banner?.subtitle || HERO_CONTENT.subtitle;
 
   return (
     <div className="relative z-10 flex min-h-screen flex-col items-center justify-center text-center px-6">
-      
+
       {/* Line 1 */}
       <motion.div
         initial={{ y: reduced ? 0 : -8 }}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Headline, Body1, Body2, BodyXS, Caption, Label } from "@/components/typography";
 import Button from "@/components/ui/Buttons";
+import { addToCart } from "@/api/cart";
 
 export default function ProductInfo({ product, onAddToCart }) {
   const [selectedSize, setSelectedSize] = useState("A4");

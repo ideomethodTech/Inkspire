@@ -1,9 +1,10 @@
 "use client";
-
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { ShoppingBag } from "lucide-react";
 import { Body1, Body2, Caption, Label, Subheading2 } from "@/components/typography";
 import Button from "@/components/ui/Buttons";
+import { getOrders } from "@/api/orders";
 
 const ORDERS = [
   {
@@ -12,8 +13,8 @@ const ORDERS = [
     status: "On Deliver",
     statusColor: "bg-red-500 text-white",
     steps: ["Placed", "Shipped", "Out for Delivery", "Delivery"],
-    completedSteps: [0, 1], // Placed and Shipped are completed
-    currentStep: 2, // Out for Delivery is current
+    completedSteps: [0, 1],
+    currentStep: 2,
     items: [
       {
         id: 1,
@@ -52,20 +53,88 @@ const ORDERS = [
 ];
 
 export default function OrdersPage() {
+  const [orders, setOrders] = useState(ORDERS); // fallback default
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+
+  const mapApiOrders = (apiOrders = []) => {
+    return apiOrders.map((o) => {
+      const steps = ["Placed", "Shipped", "Out for Delivery", "Delivery"];
+      const statusIndexMap = {
+        PENDING: 0,
+        SHIPPED: 1,
+        OUT_FOR_DELIVERY: 2,
+        DELIVERED: 3,
+        CANCELLED: 0,
+      };
+      const currentStep = statusIndexMap[o.status] ?? 0;
+
+      return {
+        id: o._id,
+        eta: o.estimatedDelivery || "TBD",
+        status: o.status,
+        statusColor:
+          o.status === "PENDING"
+            ? "bg-yellow-500 text-white"
+            : o.status === "SHIPPED"
+            ? "bg-blue-500 text-white"
+            : o.status === "OUT_FOR_DELIVERY"
+            ? "bg-orange-500 text-white"
+            : o.status === "DELIVERED"
+            ? "bg-green-500 text-white"
+            : "bg-gray-500 text-white",
+        steps,
+        completedSteps: steps.map((_, i) => i).filter((i) => i < currentStep),
+        currentStep,
+        items: (o.items || []).map((it, idx) => ({
+          id: idx,
+          title: it?.product?.name || "Product",
+          size: it?.size || "N/A",
+          price: it?.price || 0,
+          image:
+            it?.product?.images?.[0] ||
+            "/products/509e4f2b10c9e62dfc885e829716feb3618ae498.jpg",
+        })),
+      };
+    });
+  };
+
+  const fetchOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await getOrders(page);
+      const apiOrders = data?.data?.orders || data?.orders || [];
+      setOrders(Array.isArray(apiOrders) ? mapApiOrders(apiOrders) : ORDERS);
+    } catch (err) {
+      console.log("Orders API failed — using fallback", err);
+      setOrders(ORDERS);
+    } finally {
+      setLoading(false);
+    }
+  }, [page]);
+
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
   return (
     <div className="flex-1 space-y-6">
       <Subheading2 className="text-[24px] font-semibold uppercase tracking-[0.1em] text-[#20262B]">
         My Orders
       </Subheading2>
-      
+
+      {loading && <p className="text-gray-500 text-sm">Loading orders...</p>}
+
       <div className="space-y-6">
-        {ORDERS.map((order) => (
+        {orders.map((order) => (
           <OrderCard key={order.id} order={order} />
         ))}
       </div>
     </div>
   );
 }
+
 
 function OrderCard({ order }) {
   const total = order.items.reduce((sum, item) => sum + item.price, 0);
@@ -104,9 +173,7 @@ function OrderCard({ order }) {
                 <div className="relative flex w-full items-center">
                   <div
                     className={`relative z-10 h-3 w-3 rounded-full ${
-                      isCompleted || isCurrent
-                        ? "bg-orange-500"
-                        : "bg-gray-300"
+                      isCompleted || isCurrent ? "bg-orange-500" : "bg-gray-300"
                     }`}
                   >
                     {isCurrent && (
@@ -142,13 +209,7 @@ function OrderCard({ order }) {
         {order.items.map((item) => (
           <div key={item.id} className="flex items-center gap-4">
             <div className="relative h-24 w-20 overflow-hidden rounded-md bg-gray-100">
-              <Image
-                src={item.image}
-                alt={item.title}
-                fill
-                className="object-cover"
-                sizes="80px"
-              />
+              <Image src={item.image} alt={item.title} fill className="object-cover" sizes="80px" />
             </div>
             <div className="flex-1">
               <Body1 className="text-[14px] font-semibold uppercase tracking-[0.08em] text-[#20262B]">
@@ -156,9 +217,7 @@ function OrderCard({ order }) {
               </Body1>
               <Caption className="text-[11px] text-[#6D6D6D]">Size: {item.size}</Caption>
             </div>
-            <Body1 className="text-[14px] text-[#20262B]">
-              Rs. {item.price.toFixed(2)}
-            </Body1>
+            <Body1 className="text-[14px] text-[#20262B]">Rs. {item.price.toFixed(2)}</Body1>
           </div>
         ))}
       </div>
@@ -185,4 +244,3 @@ function OrderCard({ order }) {
     </section>
   );
 }
-

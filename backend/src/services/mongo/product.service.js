@@ -58,10 +58,14 @@ export class ProductService {
       if (bestseller === 'true' || bestseller === true) query.bestseller = true;
 
       // Price range filter
-      if (minPrice || maxPrice) {
+      if (minPrice !== undefined || maxPrice !== undefined) {
         query.price = {};
-        if (minPrice) query.price.$gte = parseFloat(minPrice);
-        if (maxPrice) query.price.$lte = parseFloat(maxPrice);
+        if (minPrice !== undefined && minPrice !== '') query.price.$gte = parseFloat(minPrice);
+        if (maxPrice !== undefined && maxPrice !== '') query.price.$lte = parseFloat(maxPrice);
+        
+        if (Object.keys(query.price).length === 0) {
+          delete query.price;
+        }
       }
 
       // Tags filter (match any of the provided tags)
@@ -73,9 +77,11 @@ export class ProductService {
       // Sorting options
       let sortOption = {};
       switch (sort) {
+        case 'price_low':
         case 'price_asc':
           sortOption = { price: 1 };
           break;
+        case 'price_high':
         case 'price_desc':
           sortOption = { price: -1 };
           break;
@@ -135,7 +141,7 @@ export class ProductService {
           appliedFilters: {
             type,
             category,
-            priceRange: minPrice || maxPrice ? { min: minPrice, max: maxPrice } : null,
+            priceRange: (minPrice !== undefined || maxPrice !== undefined) ? { min: minPrice, max: maxPrice } : null,
             tags: tags || null,
             sort
           }

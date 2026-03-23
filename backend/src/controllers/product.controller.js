@@ -14,8 +14,19 @@ export class ProductController {
         bestseller: req.query.bestseller === 'true',
         limit: parseInt(req.query.limit) || 20,
         page: parseInt(req.query.page) || 1,
-        showInactive: req.query.showInactive === 'true'
+        showInactive: req.query.showInactive === 'true',
+        sort: req.query.sort,
+        tags: req.query.tags
       };
+
+      if (req.query.min_price !== undefined) {
+        filters.minPrice = req.query.min_price;
+      }
+      if (req.query.max_price !== undefined) {
+        filters.maxPrice = req.query.max_price;
+      }
+
+      console.log('[GET ALL PRODUCTS] Applied Filters:', filters);
 
       const result = await ProductService.getAllProducts(filters);
 

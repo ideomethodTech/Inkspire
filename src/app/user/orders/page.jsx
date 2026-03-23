@@ -4,58 +4,13 @@ import Image from "next/image";
 import { ShoppingBag } from "lucide-react";
 import { Body1, Body2, Caption, Label, Subheading2 } from "@/components/typography";
 import Button from "@/components/ui/Buttons";
-import { getOrders } from "@/api/orders";
-
-const ORDERS = [
-  {
-    id: "CTH-89765",
-    eta: "20 May, 2025",
-    status: "On Deliver",
-    statusColor: "bg-red-500 text-white",
-    steps: ["Placed", "Shipped", "Out for Delivery", "Delivery"],
-    completedSteps: [0, 1],
-    currentStep: 2,
-    items: [
-      {
-        id: 1,
-        title: "LOREM IPSUM",
-        size: "A3",
-        price: 399,
-        image: "/products/509e4f2b10c9e62dfc885e829716feb3618ae498.jpg",
-      },
-      {
-        id: 2,
-        title: "LOREM IPSUM",
-        size: "A3",
-        price: 399,
-        image: "/products/4ad9203dd2a598811e58c6fc9a3fca19c5bccd53.jpg",
-      },
-    ],
-  },
-  {
-    id: "CTH-89766",
-    eta: "25 May, 2025",
-    status: "Shipped",
-    statusColor: "bg-blue-500 text-white",
-    steps: ["Placed", "Shipped", "Out for Delivery", "Delivery"],
-    completedSteps: [0, 1],
-    currentStep: 1,
-    items: [
-      {
-        id: 3,
-        title: "LOREM IPSUM",
-        size: "A4",
-        price: 299,
-        image: "/products/509e4f2b10c9e62dfc885e829716feb3618ae498.jpg",
-      },
-    ],
-  },
-];
+import { getOrders, getOrderDetails, cancelOrder } from "@/api/orders";
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState(ORDERS); // fallback default
+  const [orders, setOrders] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const mapApiOrders = (apiOrders = []) => {
     return apiOrders.map((o) => {
@@ -67,32 +22,35 @@ export default function OrdersPage() {
         DELIVERED: 3,
         CANCELLED: 0,
       };
-      const currentStep = statusIndexMap[o.status] ?? 0;
+      const statusValue = (o.status || "").toString().toUpperCase();
+      const currentStep = statusIndexMap[statusValue] ?? 0;
 
       return {
-        id: o._id,
+        id: o._id || o.id,
+        orderNumber: o.orderNumber || o.orderNo || o.number,
         eta: o.estimatedDelivery || "TBD",
-        status: o.status,
+        status: statusValue || o.status || "PENDING",
         statusColor:
-          o.status === "PENDING"
+          statusValue === "PENDING"
             ? "bg-yellow-500 text-white"
-            : o.status === "SHIPPED"
+            : statusValue === "SHIPPED"
             ? "bg-blue-500 text-white"
-            : o.status === "OUT_FOR_DELIVERY"
+            : statusValue === "OUT_FOR_DELIVERY"
             ? "bg-orange-500 text-white"
-            : o.status === "DELIVERED"
+            : statusValue === "DELIVERED"
             ? "bg-green-500 text-white"
             : "bg-gray-500 text-white",
         steps,
         completedSteps: steps.map((_, i) => i).filter((i) => i < currentStep),
         currentStep,
-        items: (o.items || []).map((it, idx) => ({
+        items: (o.items || o.products || []).map((it, idx) => ({
           id: idx,
-          title: it?.product?.name || "Product",
-          size: it?.size || "N/A",
-          price: it?.price || 0,
+          title: it?.product?.name || it?.product?.title || it?.name || "Product",
+          size: it?.size || it?.variant?.size || "N/A",
+          price: it?.price || it?.variant?.price || 0,
           image:
             it?.product?.images?.[0] ||
+            it?.images?.[0] ||
             "/products/509e4f2b10c9e62dfc885e829716feb3618ae498.jpg",
         })),
       };
@@ -102,12 +60,40 @@ export default function OrdersPage() {
   const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
+      setError("");
+      const token =
+        typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
+      if (!token) {
+        setOrders([]);
+        setError("Please sign in to view your orders.");
+        return;
+      }
       const data = await getOrders(page);
       const apiOrders = data?.data?.orders || data?.orders || [];
-      setOrders(Array.isArray(apiOrders) ? mapApiOrders(apiOrders) : ORDERS);
+      if (!Array.isArray(apiOrders) || apiOrders.length === 0) {
+        setOrders([]);
+        return;
+      }
+
+      const detailedOrders = await Promise.all(
+        apiOrders.map(async (order) => {
+          const id = order._id || order.id;
+          if (!id) return order;
+          try {
+            const detailsRes = await getOrderDetails(id);
+            return detailsRes?.data || detailsRes || order;
+          } catch (detailErr) {
+            console.warn("Failed to load order details", detailErr);
+            return order;
+          }
+        })
+      );
+
+      setOrders(mapApiOrders(detailedOrders));
     } catch (err) {
       console.log("Orders API failed — using fallback", err);
-      setOrders(ORDERS);
+      setOrders([]);
+      setError("Unable to load orders.");
     } finally {
       setLoading(false);
     }
@@ -127,8 +113,25 @@ export default function OrdersPage() {
       {loading && <p className="text-gray-500 text-sm">Loading orders...</p>}
 
       <div className="space-y-6">
+        {!loading && orders.length === 0 && (
+          <p className="text-sm text-gray-500">{error || "No orders yet."}</p>
+        )}
         {orders.map((order) => (
-          <OrderCard key={order.id} order={order} />
+          <OrderCard
+            key={order.id}
+            order={order}
+            onCancel={async () => {
+              if (!order.id) return;
+              try {
+                const res = await cancelOrder(order.id);
+                if (res?.success) {
+                  fetchOrders();
+                }
+              } catch (cancelErr) {
+                console.warn("Cancel order failed", cancelErr);
+              }
+            }}
+          />
         ))}
       </div>
     </div>
@@ -136,7 +139,7 @@ export default function OrdersPage() {
 }
 
 
-function OrderCard({ order }) {
+function OrderCard({ order, onCancel }) {
   const total = order.items.reduce((sum, item) => sum + item.price, 0);
 
   return (
@@ -236,9 +239,19 @@ function OrderCard({ order }) {
               </Caption>
             </div>
           </div>
-          <Button className="bg-black text-white hover:bg-gray-800 uppercase tracking-[0.08em]">
-            Details
-          </Button>
+          <div className="flex items-center gap-3">
+            {order.status === "PENDING" && (
+              <Button
+                className="bg-white text-black border border-black hover:bg-gray-100 uppercase tracking-[0.08em]"
+                onClick={onCancel}
+              >
+                Cancel
+              </Button>
+            )}
+            <Button className="bg-black text-white hover:bg-gray-800 uppercase tracking-[0.08em]">
+              Details
+            </Button>
+          </div>
         </div>
       </div>
     </section>

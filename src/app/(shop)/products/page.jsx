@@ -1,35 +1,128 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import PageWrapper from "@/components/layout/PageWrapper";
 import { Headline, BodyXS, Caption } from "@/components/typography";
 import Button from "@/components/ui/Buttons";
-import { MOCK_PRODUCTS } from "@/lib/constants/products";
 import ProductCard from "@/components/product/ProductCard";
+import { getProductFilters, getProducts } from "@/services";
 
 const PRICE_MIN = 249;
 const PRICE_MAX = 13499;
+const PAGE_SIZE = 10;
 
 export default function ProductsPage() {
-  const [sortBy, setSortBy] = useState("relevance");
+  const [sortBy, setSortBy] = useState("newest");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [minPrice, setMinPrice] = useState(PRICE_MIN);
   const [maxPrice, setMaxPrice] = useState(PRICE_MAX);
+  const [products, setProducts] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [filters, setFilters] = useState({
+    categories: [],
+    types: [],
+    tags: [],
+    priceRange: null,
+    sortOptions: [],
+  });
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedType, setSelectedType] = useState("");
+  const [selectedTags, setSelectedTags] = useState([]);
 
-  const products = useMemo(() => {
-    const withinPrice = MOCK_PRODUCTS.filter(
-      (p) => p.price >= PRICE_MIN && p.price <= maxPrice
-    );
+  useEffect(() => {
+    setPage(1);
+  }, [sortBy, minPrice, maxPrice, selectedCategory, selectedType, selectedTags]);
 
-    if (sortBy === "price_low") {
-      return [...withinPrice].sort((a, b) => a.price - b.price);
+  useEffect(() => {
+    let active = true;
+
+    const loadProducts = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const minPriceValue = Number.isFinite(minPrice) ? minPrice : undefined;
+        const maxPriceValue = Number.isFinite(maxPrice) ? maxPrice : undefined;
+        const normalizedTags = selectedTags
+          .map((tag) => tag.trim().toLowerCase())
+          .filter(Boolean);
+
+        const {
+          products: apiProducts,
+          total: apiTotal,
+          page: apiPage,
+          totalPages: apiTotalPages,
+        } = await getProducts({
+          sort: sortBy,
+          minPrice: minPriceValue,
+          maxPrice: maxPriceValue,
+          page,
+          limit: PAGE_SIZE,
+          category: selectedCategory || undefined,
+          type: selectedType || undefined,
+          tags: normalizedTags.length > 0 ? normalizedTags : undefined,
+        });
+        if (!active) return;
+        setProducts(apiProducts);
+        setTotal(apiTotal ?? apiProducts.length);
+        setTotalPages(apiTotalPages ?? 1);
+        setPage(apiPage ?? page);
+      } catch (err) {
+        console.error("Failed to load products", err);
+        if (!active) return;
+        setError("Unable to load products right now.");
+      } finally {
+        if (!active) return;
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+
+    return () => {
+      active = false;
+    };
+  }, [sortBy, minPrice, maxPrice, page, selectedCategory, selectedType, selectedTags]);
+
+  useEffect(() => {
+    if (!isFilterOpen || filters.categories.length > 0 || filters.types.length > 0 || filters.tags.length > 0) {
+      return;
     }
 
-    if (sortBy === "price_high") {
-      return [...withinPrice].sort((a, b) => b.price - a.price);
-    }
+    let active = true;
 
-    return withinPrice;
-  }, [maxPrice, sortBy]);
+    const loadFilters = async () => {
+      try {
+        const data = await getProductFilters();
+        if (!active || !data) return;
+
+        const priceRange = data.priceRange || data.price || null;
+        setFilters({
+          categories: data.categories || [],
+          types: data.types || [],
+          tags: data.tags || [],
+          priceRange,
+          sortOptions: data.sortOptions || [],
+        });
+
+        if (priceRange) {
+          setMinPrice((prev) => (prev === PRICE_MIN ? priceRange.min : prev));
+          setMaxPrice((prev) => (prev === PRICE_MAX ? priceRange.max : prev));
+        }
+      } catch (err) {
+        console.error("Failed to load filters", err);
+      }
+    };
+
+    loadFilters();
+
+    return () => {
+      active = false;
+    };
+  }, [isFilterOpen, filters.categories.length, filters.types.length, filters.tags.length]);
 
   const scrollToBottom = () => {
     window.scrollTo({
@@ -41,8 +134,8 @@ export default function ProductsPage() {
   return (
     <PageWrapper>
       {/* ================= HERO ================= */}
-      <section className="overflow-hidden rounded-md bg-black">
-        <div className="relative h-[220px] w-full sm:h-[260px] lg:h-[300px]">
+      <section className="relative bg-black">
+        <div className="relative h-[220px] w-full overflow-hidden rounded-md sm:h-[260px] lg:h-[300px]">
           <div className="absolute inset-0 grid grid-cols-3 gap-[1px] bg-black/60">
             <img
               src="/products/bca506c86a8dad71a1b3a689782da771d840d837.jpg"
@@ -69,17 +162,17 @@ export default function ProductsPage() {
               Curated character posters & prints
             </Caption>
           </div>
+        </div>
 
-          <div className="absolute bottom-0 left-1/2 z-30 -translate-x-1/2 translate-y-1/2">
-            <button
-              onClick={scrollToBottom}
-              className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-md"
-            >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white">
-                ↓
-              </span>
-            </button>
-          </div>
+        <div className="absolute bottom-0 left-1/2 z-30 -translate-x-1/2 translate-y-1/2">
+          <button
+            onClick={scrollToBottom}
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-md"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white">
+              ↓
+            </span>
+          </button>
         </div>
       </section>
 
@@ -91,10 +184,17 @@ export default function ProductsPage() {
             onChange={(e) => setSortBy(e.target.value)}
             className="cursor-pointer bg-transparent uppercase outline-none"
           >
-            <option value="relevance">Default</option>
-            <option value="price_low">Price Low</option>
-            <option value="price_high">Price High</option>
+            <option value="newest">Newest</option>
+            <option value="price_asc">Price Low</option>
+            <option value="price_desc">Price High</option>
+            <option value="popular">Popular</option>
+            <option value="name_asc">Name A–Z</option>
+            <option value="name_desc">Name Z–A</option>
           </select>
+        </div>
+        <div className="hidden items-center gap-2 sm:flex">
+          <span>{loading ? "..." : total}</span>
+          <span>ITEMS</span>
         </div>
         <button
           type="button"
@@ -120,17 +220,183 @@ export default function ProductsPage() {
 
       {/* ================= PRODUCTS GRID ================= */}
       <section className="mt-6">
+        {loading && (
+          <div className="flex items-center justify-center py-12 text-sm text-neutral-500">
+            Loading products...
+          </div>
+        )}
+
+        {!loading && error && (
+          <div className="flex items-center justify-center py-12 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && products.length === 0 && (
+          <div className="flex items-center justify-center py-12 text-sm text-neutral-500">
+            No products found.
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-6 lg:grid-cols-3">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
+
+        {!loading && !error && totalPages > 1 && (
+          <div className="mt-10 flex flex-col items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
+            <div>
+              Page {page} of {totalPages}
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                disabled={page <= 1}
+                className="rounded-full border border-neutral-300 px-4 py-2 text-[10px] disabled:opacity-40"
+              >
+                Prev
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={page >= totalPages}
+                className="rounded-full border border-neutral-300 px-4 py-2 text-[10px] disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ================= FILTER MODAL ================= */}
       {isFilterOpen && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 px-4">
-          {/* modal unchanged */}
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
+              <span className="text-xs uppercase tracking-[0.16em] text-[#20262B]">
+                Filters
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsFilterOpen(false)}
+                className="text-lg leading-none text-[#20262B]"
+                aria-label="Close filters"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mt-4 flex flex-col gap-4 text-sm text-[#20262B]">
+              <label className="text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
+                Category
+              </label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              >
+                <option value="">All</option>
+                {filters.categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+
+              <label className="text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
+                Type
+              </label>
+              <select
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              >
+                <option value="">All</option>
+                {filters.types.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+
+              <label className="text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
+                Tags
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {filters.tags.map((tag) => {
+                  const isActive = selectedTags.includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() =>
+                        setSelectedTags((prev) =>
+                          prev.includes(tag)
+                            ? prev.filter((t) => t !== tag)
+                            : [...prev, tag]
+                        )
+                      }
+                      className={`rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.12em] ${isActive
+                          ? "border-black bg-black text-white"
+                          : "border-neutral-300 text-[#20262B]"
+                        }`}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <label className="text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
+                Price Range
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="number"
+                  value={minPrice}
+                  min={filters.priceRange?.min ?? 0}
+                  max={maxPrice}
+                  onChange={(e) => setMinPrice(Number(e.target.value))}
+                  className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+                />
+                <span className="text-xs text-neutral-500">to</span>
+                <input
+                  type="number"
+                  value={maxPrice}
+                  min={minPrice}
+                  max={filters.priceRange?.max ?? PRICE_MAX}
+                  onChange={(e) => setMaxPrice(Number(e.target.value))}
+                  className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory("");
+                  setSelectedType("");
+                  setSelectedTags([]);
+                  setMinPrice(filters.priceRange?.min ?? PRICE_MIN);
+                  setMaxPrice(filters.priceRange?.max ?? PRICE_MAX);
+                }}
+                className="text-xs uppercase tracking-[0.16em] text-[#6D6D6D]"
+              >
+                Clear all
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsFilterOpen(false)}
+                className="rounded-full bg-black px-5 py-2 text-[11px] uppercase tracking-[0.16em] text-white"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </PageWrapper>

@@ -9,6 +9,9 @@ export default function ProductInfo({ product, onAddToCart }) {
   const [selectedSize, setSelectedSize] = useState("A4");
   const [quantity, setQuantity] = useState(1);
   const [expandedSections, setExpandedSections] = useState({});
+  const priceNumber =
+    typeof product.price === "number" ? product.price : Number(product.price);
+  const hasPrice = Number.isFinite(priceNumber);
 
   const sizes = ["A4", "A3", "13 x 19"];
 
@@ -33,13 +36,15 @@ export default function ProductInfo({ product, onAddToCart }) {
     <div className="flex flex-col gap-6">
       {/* Title */}
       <Headline className="text-[24px] md:text-[32px] uppercase tracking-[0.1em]">
-        {product.title}
+        {product.title || product.name || "Untitled"}
       </Headline>
 
       {/* Price */}
       <div className="flex flex-col gap-1">
         <Body1 className="text-[24px] md:text-[28px] font-semibold text-[#20262B]">
-          Rs. {product.price.toLocaleString("en-IN")}
+          {hasPrice
+            ? `Rs. ${priceNumber.toLocaleString("en-IN")}`
+            : "Price unavailable"}
         </Body1>
         <Caption className="text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
           MRP inclusive of all taxes
@@ -189,4 +194,3 @@ export default function ProductInfo({ product, onAddToCart }) {
     </div>
   );
 }
-

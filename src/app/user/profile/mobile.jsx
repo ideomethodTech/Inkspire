@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Edit, Trash2, MapPin, Wallet, CreditCard, Info, ShieldCheck, CheckCircle2, ChevronRight, PlusCircle } from "lucide-react";
 import { Body1, Body2, Caption, Subheading2 } from "@/components/typography";
+import { getProfile } from "@/api/profile";
 
 const ADDRESSES = [
   {
@@ -31,6 +32,50 @@ export default function MobileProfilePage() {
   const [couponTab, setCouponTab] = useState("available");
   const [isEditing, setIsEditing] = useState(false);
   const [scrollPage, setScrollPage] = useState(0);
+  const [profile, setProfile] = useState(null);
+  const [profileError, setProfileError] = useState("");
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      const token =
+        typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
+      if (!token) {
+        setProfileError("Please sign in to view your profile.");
+        return;
+      }
+
+      try {
+        const stored = window.localStorage.getItem("user");
+        if (stored) {
+          setProfile(JSON.parse(stored));
+        }
+      } catch (err) {
+        console.warn("Failed to parse stored user", err);
+      }
+
+      try {
+        const res = await getProfile();
+        const data = res?.data || res?.user || res;
+        if (data) {
+          setProfile((prev) => ({ ...prev, ...data }));
+        }
+      } catch (err) {
+        console.warn("Failed to load profile", err);
+        if (!profile) {
+          setProfileError("Unable to load profile.");
+        }
+      }
+    };
+
+    loadProfile();
+  }, []);
+
+  const fullName =
+    profile?.displayName ||
+    profile?.name ||
+    (profile?.email ? profile.email.split("@")[0] : "User");
+  const email = profile?.email || "Not provided";
+  const phone = profile?.phone || profile?.mobile || "Not provided";
 
   useEffect(() => {
     setActiveTabState(getInitialTab());
@@ -206,6 +251,9 @@ export default function MobileProfilePage() {
         {/* PROFILE TAB */}
         {activeTab === "profile" && (
           <>
+            {profileError && (
+              <p className="text-sm text-gray-500">{profileError}</p>
+            )}
             {/* Profile Section */}
             <section className="rounded-2xl bg-white p-5 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
@@ -230,7 +278,7 @@ export default function MobileProfilePage() {
                     Full Name
                   </Caption>
                   <Body1 className="text-[14px] font-medium text-[#111827]">
-                    Samantha Smith
+                    {fullName}
                   </Body1>
                 </div>
 
@@ -240,10 +288,10 @@ export default function MobileProfilePage() {
                   </Caption>
                   <div className="flex items-center gap-2">
                     <Body1 className="text-[14px] font-medium text-[#111827]">
-                      smantha@gmail.com
+                      {email}
                     </Body1>
                     <span className="rounded-full bg-[#E8F5E9] px-3 py-1 text-[10px] font-semibold text-[#2E7D32]">
-                      Verified
+                      {email === "Not provided" ? "Not Verified" : "Verified"}
                     </span>
                   </div>
                 </div>
@@ -254,10 +302,10 @@ export default function MobileProfilePage() {
                   </Caption>
                   <div className="flex items-center gap-2">
                     <Body1 className="text-[14px] font-medium text-[#111827]">
-                      +123 456 7890
+                      {phone}
                     </Body1>
                     <span className="rounded-full bg-[#FFF4E5] px-3 py-1 text-[10px] font-semibold text-[#C05621]">
-                      Not Verified
+                      {phone === "Not provided" ? "Not Verified" : "Verified"}
                     </span>
                   </div>
                 </div>

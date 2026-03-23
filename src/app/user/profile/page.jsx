@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Edit, Trash2, Mail, Phone, Plus } from "lucide-react";
 import { Body1, Body2, Caption, Label, Subheading2 } from "@/components/typography";
+import { getProfile } from "@/api/profile";
 
 const ADDRESSES = [
   {
@@ -22,9 +23,57 @@ export default function ProfilePage() {
 
 function DesktopProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      const token =
+        typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
+      if (!token) {
+        setError("Please sign in to view your profile.");
+        return;
+      }
+
+      try {
+        const stored = window.localStorage.getItem("user");
+        if (stored) {
+          setProfile(JSON.parse(stored));
+        }
+      } catch (err) {
+        console.warn("Failed to parse stored user", err);
+      }
+
+      try {
+        const res = await getProfile();
+        const data = res?.data || res?.user || res;
+        if (data) {
+          setProfile((prev) => ({ ...prev, ...data }));
+        }
+      } catch (err) {
+        console.warn("Failed to load profile", err);
+        if (!profile) {
+          setError("Unable to load profile.");
+        }
+      }
+    };
+
+    loadProfile();
+  }, []);
+
+  const fullName =
+    profile?.displayName ||
+    profile?.name ||
+    (profile?.email ? profile.email.split("@")[0] : "User");
+  const email = profile?.email || "Not provided";
+  const phone = profile?.phone || profile?.mobile || "Not provided";
+  const dob = profile?.dob || profile?.dateOfBirth || "Not provided";
 
   return (
     <div className="flex-1 space-y-8">
+      {error && (
+        <p className="text-sm text-gray-500">{error}</p>
+      )}
       {/* Profile Card */}
       <section className="rounded-lg bg-white p-8 shadow-sm">
         <div className="mb-6 flex items-center justify-between">
@@ -48,19 +97,25 @@ function DesktopProfilePage() {
               <Caption className="mb-2 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
                 Full Name
               </Caption>
-              <Body1 className="text-[14px] font-medium text-[#20262B]">Samantha Smith</Body1>
+              <Body1 className="text-[14px] font-medium text-[#20262B]">
+                {fullName}
+              </Body1>
             </div>
             <div>
               <Caption className="mb-2 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
                 Mobile Number
               </Caption>
-              <Body1 className="text-[14px] font-medium text-[#20262B]">+123 456 7890</Body1>
+              <Body1 className="text-[14px] font-medium text-[#20262B]">
+                {phone}
+              </Body1>
             </div>
             <div>
               <Caption className="mb-2 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
                 Date of Birth
               </Caption>
-              <Body1 className="text-[14px] font-medium text-[#20262B]">12/12/1990</Body1>
+              <Body1 className="text-[14px] font-medium text-[#20262B]">
+                {dob}
+              </Body1>
             </div>
           </div>
 
@@ -70,17 +125,25 @@ function DesktopProfilePage() {
               icon={Mail}
               iconColor="text-green-500"
               label="Email"
-              value="samantha@gmail.com"
-              status="Verified"
-              statusColor="bg-green-100 text-green-700"
+              value={email}
+              status={email === "Not provided" ? "Not Verified" : "Verified"}
+              statusColor={
+                email === "Not provided"
+                  ? "bg-orange-100 text-orange-700"
+                  : "bg-green-100 text-green-700"
+              }
             />
             <VerificationBox
               icon={Phone}
               iconColor="text-orange-500"
               label="Mobile"
-              value="Mobile"
-              status="Not Verified"
-              statusColor="bg-orange-100 text-orange-700"
+              value={phone}
+              status={phone === "Not provided" ? "Not Verified" : "Verified"}
+              statusColor={
+                phone === "Not provided"
+                  ? "bg-orange-100 text-orange-700"
+                  : "bg-green-100 text-green-700"
+              }
             />
           </div>
         </div>
@@ -165,4 +228,3 @@ function AddressCard({ address }) {
     </div>
   );
 }
-

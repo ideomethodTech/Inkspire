@@ -1,14 +1,48 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import Button from "@/components/ui/Buttons";
 import { BodyXS, Caption } from "@/components/typography";
+import { addToCart } from "@/api/cart";
 
 export default function ProductCard({ product }) {
   const productId = product.id || product._id;
   const priceNumber =
     typeof product.price === "number" ? product.price : Number(product.price);
   const hasPrice = Number.isFinite(priceNumber);
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
+
+  const handleAddToCart = async (e) => {
+    e.preventDefault();
+    if (!productId) return;
+
+    const token =
+      typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
+    if (!token) {
+      alert("Please sign in to add items to cart.");
+      return;
+    }
+
+    setAdding(true);
+    setAdded(false);
+    try {
+      const variants = Array.isArray(product.variants) ? product.variants : [];
+      const variantIndex = variants.length > 0 ? 0 : 0;
+      const res = await addToCart({ productId, variantIndex, quantity: 1 });
+      if (res?.success) {
+        setAdded(true);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("cart:updated"));
+        }
+      }
+    } catch (err) {
+      console.error("Add to cart failed", err);
+    } finally {
+      setAdding(false);
+    }
+  };
 
   return (
     <Link
@@ -61,11 +95,9 @@ export default function ProductCard({ product }) {
           <Button
             size="sm"
             className="h-8 px-3 text-[10px]"
-            onClick={(e) => {
-              e.preventDefault();
-            }}
+            onClick={handleAddToCart}
           >
-            Add to cart
+            {adding ? "Adding..." : added ? "Added" : "Add to cart"}
           </Button>
         </div>
       </div>

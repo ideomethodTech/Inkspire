@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Search, User, Heart, ShoppingBag, ChevronDown, Menu, X } from "lucide-react";
 import { Subheading2 } from "../typography";
@@ -8,6 +8,7 @@ import AuthModal from "@/components/auth/AuthModal";
 import SearchOverlay from "@/components/search/SearchOverlay";
 import Image from "next/image";
 import MobileMenu from "./MobileMenu";
+import { getCart } from "@/api/cart";
 
 
 export default function Header() {
@@ -16,6 +17,45 @@ export default function Header() {
   const [openMenu, setOpenMenu] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [cartCount, setCartCount] = useState(0);
+
+  const refreshCartCount = useCallback(async () => {
+    const token =
+      typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
+    if (!token) {
+      setCartCount(0);
+      return;
+    }
+
+    try {
+      const res = await getCart();
+      if (!res?.success) {
+        setCartCount(0);
+        return;
+      }
+      const items = res?.data?.items || res?.items || [];
+      const count = Array.isArray(items)
+        ? items.reduce((sum, item) => sum + (item.quantity || 1), 0)
+        : 0;
+      setCartCount(count);
+    } catch (err) {
+      console.warn("Failed to fetch cart count", err);
+      setCartCount(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshCartCount();
+    const handleCartUpdate = () => refreshCartCount();
+    if (typeof window !== "undefined") {
+      window.addEventListener("cart:updated", handleCartUpdate);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("cart:updated", handleCartUpdate);
+      }
+    };
+  }, [refreshCartCount]);
   
 
 
@@ -53,9 +93,14 @@ className="hover:opacity-70 transition-opacity outline-none"
 <Link
 href="/cart"
 aria-label="Cart"
-className="hover:opacity-70 transition-opacity"
+className="relative hover:opacity-70 transition-opacity"
 >
 <ShoppingBag size={18} />
+{cartCount > 0 && (
+  <span className="absolute -top-2 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-black px-1 text-[10px] text-white">
+    {cartCount}
+  </span>
+)}
 </Link>
 </div>
 </div>
@@ -451,9 +496,14 @@ className="hover:opacity-70 transition-opacity outline-none"
 <Link
 href="/cart"
 aria-label="Cart"
-className="hover:opacity-70 transition-opacity"
+className="relative hover:opacity-70 transition-opacity"
 >
 <ShoppingBag size={18} />
+{cartCount > 0 && (
+  <span className="absolute -top-2 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-black px-1 text-[10px] text-white">
+    {cartCount}
+  </span>
+)}
 </Link>
 </div>
 </div>

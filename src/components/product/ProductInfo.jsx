@@ -9,6 +9,7 @@ export default function ProductInfo({ product, onAddToCart }) {
   const [selectedSize, setSelectedSize] = useState("A4");
   const [quantity, setQuantity] = useState(1);
   const [expandedSections, setExpandedSections] = useState({});
+  const [cartMessage, setCartMessage] = useState("");
   const priceNumber =
     typeof product.price === "number" ? product.price : Number(product.price);
   const hasPrice = Number.isFinite(priceNumber);
@@ -22,13 +23,48 @@ export default function ProductInfo({ product, onAddToCart }) {
     }));
   };
 
-  const handleAddToCart = () => {
-    if (onAddToCart) {
-      onAddToCart({
-        ...product,
-        size: selectedSize,
+  const handleAddToCart = async () => {
+    setCartMessage("");
+    const token =
+      typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
+    if (!token) {
+      setCartMessage("Please sign in to add items to cart.");
+      return;
+    }
+
+    const productId = product.id || product._id;
+    if (!productId) {
+      setCartMessage("Unable to add this product.");
+      return;
+    }
+
+    const variants = Array.isArray(product.variants) ? product.variants : [];
+    let variantIndex = variants.findIndex((v) => v.size === selectedSize);
+    if (variantIndex < 0) variantIndex = 0;
+
+    try {
+      const res = await addToCart({
+        productId,
+        variantIndex,
         quantity,
       });
+      if (res?.success) {
+        setCartMessage("Added to cart.");
+        if (onAddToCart) {
+          onAddToCart({
+            ...product,
+            size: selectedSize,
+            quantity,
+          });
+        }
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("cart:updated"));
+        }
+      } else {
+        setCartMessage(res?.message || "Unable to add to cart.");
+      }
+    } catch (err) {
+      setCartMessage("Unable to add to cart.");
     }
   };
 
@@ -123,6 +159,11 @@ export default function ProductInfo({ product, onAddToCart }) {
           ADD
         </Button>
       </div>
+      {cartMessage && (
+        <Caption className="text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">
+          {cartMessage}
+        </Caption>
+      )}
 
       {/* Customization */}
       <button

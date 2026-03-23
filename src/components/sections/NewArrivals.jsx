@@ -3,17 +3,26 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Headline } from "../typography";
 import Skeleton from "@/components/ui/Skeleton";
-import { MOCK_PRODUCTS } from "@/lib/constants/products";
+import { getProducts } from "@/services"; // API service
 
 export default function NewArrivals() {
-  const newArrivals = MOCK_PRODUCTS.slice(0, 3);
-
+  const [newArrivals, setNewArrivals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1200);
-    return () => clearTimeout(timer);
+    const fetchProducts = async () => {
+      try {
+        // Fetch first 3 products from backend
+        const { products } = await getProducts({ page: 1, limit: 3 });
+        setNewArrivals(products);
+      } catch (err) {
+        console.error("Failed to load new arrivals", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, []);
 
   return (
@@ -36,10 +45,7 @@ export default function NewArrivals() {
           ? Array(3)
               .fill(0)
               .map((_, i) => (
-                <div
-                  key={i}
-                  className="border rounded-lg overflow-hidden p-4"
-                >
+                <div key={i} className="border rounded-lg overflow-hidden p-4">
                   <Skeleton variant="rectangle" width="w-full" height="h-64" />
                   <div className="mt-4">
                     <Skeleton variant="text" width="w-32" height="h-4" className="mb-2" />
@@ -49,10 +55,7 @@ export default function NewArrivals() {
                 </div>
               ))
           : newArrivals.map((product) => (
-              <div
-                key={product.id}
-                className="border rounded-lg overflow-hidden hover:shadow-lg transition"
-              >
+              <div key={product.id} className="border rounded-lg overflow-hidden hover:shadow-lg transition">
                 <Image
                   src={product.image}
                   alt={product.title}
@@ -60,7 +63,6 @@ export default function NewArrivals() {
                   height={500}
                   className="w-full h-64 object-cover"
                 />
-
                 <div className="p-4">
                   <h3 className="font-medium">{product.title}</h3>
                   <p className="text-sm text-gray-500">{product.artist}</p>

@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { loginUser as realLoginUser } from "@/api/auth";
+import { loginUser as realLoginUser, registerUser } from "@/api/auth";
 import { auth } from "@/lib/firebase";
 import {
   signInWithEmailAndPassword,
@@ -18,6 +18,9 @@ export default function AuthModal({ initialMode = "email", onClose }) {
   const [mode, setMode] = useState(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [dob, setDob] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const googleProvider = new GoogleAuthProvider();
 
@@ -28,7 +31,7 @@ export default function AuthModal({ initialMode = "email", onClose }) {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/check-email?email=${email}`
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"}/auth/check-email?email=${email}`
       );
       const data = await response.json();
       setMode(data.isExistingUser ? "signin" : "signup");
@@ -70,6 +73,7 @@ export default function AuthModal({ initialMode = "email", onClose }) {
   // --- Handle signup ---
   const handleSignup = async () => {
     if (!password) return alert("Please enter a password");
+    if (!name) return alert("Please enter your name");
     setLoading(true);
 
     try {
@@ -80,7 +84,14 @@ export default function AuthModal({ initialMode = "email", onClose }) {
       );
 
       const idToken = await userCredential.user.getIdToken();
-      const data = await realLoginUser(idToken);
+      const data = await registerUser({
+        idToken,
+        email,
+        password, // Some backends might want this if not purely firebase
+        name,
+        dob,
+        phone_number: phoneNumber
+      });
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
@@ -95,28 +106,24 @@ export default function AuthModal({ initialMode = "email", onClose }) {
   };
 
   const handleGoogleLogin = async () => {
+    setLoading(true);
 
-     console.log("Google login clicked");
-  setLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      const data = await realLoginUser(idToken);
 
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
 
-    const idToken = await result.user.getIdToken();
-
-    const data = await realLoginUser(idToken);
-
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-
-    window.location.href = "/user/profile";
-  } catch (error) {
-    console.error("Google login failed:", error);
-    alert(error.message || "Google login failed");
-  } finally {
-    setLoading(false);
-  }
-};
+      window.location.href = "/user/profile";
+    } catch (error) {
+      console.error("Google login failed:", error);
+      alert(error.message || "Google login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -136,7 +143,7 @@ export default function AuthModal({ initialMode = "email", onClose }) {
             </p>
 
             <label className="mb-2 block text-sm font-medium">Email *</label>
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" />
 
             <Button
               className="mt-6 w-full"
@@ -152,14 +159,14 @@ export default function AuthModal({ initialMode = "email", onClose }) {
               <div className="h-px flex-1 bg-border" />
             </div>
 
-           <Button
-  variant="outline"
-  className="w-full"
-  onClick={handleGoogleLogin}
-  disabled={loading}
->
-  Continue with Google
-</Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+            >
+              Continue with Google
+            </Button>
           </>
         )}
 
@@ -187,7 +194,7 @@ export default function AuthModal({ initialMode = "email", onClose }) {
 
         {/* SIGN UP */}
         {mode === "signup" && (
-          <>
+          <div className="max-h-[80vh] overflow-y-auto pr-2">
             <h2 className="mb-2 text-sm font-semibold uppercase">
               Create an account
             </h2>
@@ -196,8 +203,12 @@ export default function AuthModal({ initialMode = "email", onClose }) {
               profile
             </p>
 
+            {/* Name */}
+            <label className="mb-2 block text-sm font-medium">Full Name *</label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" />
+
             {/* Email */}
-            <label className="mb-2 block text-sm font-medium">Email *</label>
+            <label className="mt-4 mb-2 block text-sm font-medium">Email *</label>
             <Input value={email} disabled />
 
             {/* Password */}
@@ -218,14 +229,28 @@ export default function AuthModal({ initialMode = "email", onClose }) {
             <label className="mt-4 mb-2 block text-sm font-medium">
               Date of birth *
             </label>
-            <Input placeholder="MM / DD / YYYY" />
+            <Input 
+              placeholder="MM / DD / YYYY" 
+              value={dob} 
+              onChange={(e) => setDob(e.target.value)} 
+            />
+
+            {/* Phone Number */}
+            <label className="mt-4 mb-2 block text-sm font-medium">
+              Phone Number *
+            </label>
+            <Input 
+              placeholder="Phone Number" 
+              value={phoneNumber} 
+              onChange={(e) => setPhoneNumber(e.target.value)} 
+            />
 
             {/* Newsletter checkbox */}
             <div className="mt-4 flex items-center gap-2">
-              <Checkbox />
-              <span className="text-xs">
+              <Checkbox id="newsletter" />
+              <label htmlFor="newsletter" className="text-xs">
                 Sign up for email updates and offers
-              </span>
+              </label>
             </div>
 
             <Button
@@ -243,7 +268,7 @@ export default function AuthModal({ initialMode = "email", onClose }) {
             >
               Already have an account? Sign in
             </Button>
-          </>
+          </div>
         )}
       </div>
     </div>

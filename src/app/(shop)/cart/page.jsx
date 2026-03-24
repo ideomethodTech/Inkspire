@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import PageWrapper from "@/components/layout/PageWrapper";
 import { Headline, Body2, Label } from "@/components/typography";
@@ -12,6 +12,7 @@ import {
   clearCart,
 } from "@/api/cart";
 import { getProductById } from "@/services";
+import { useCoupons } from "@/lib/hooks/useCoupons";
 
 const FALLBACK_IMAGE =
   "/products/4ad9203dd2a598811e58c6fc9a3fca19c5bccd53.jpg";
@@ -86,6 +87,15 @@ export default function CartPage() {
   const [error, setError] = useState("");
   const router = useRouter();
 
+  const { 
+    applyCoupon, 
+    appliedCoupon, 
+    removeCoupon, 
+    error: couponError, 
+    loading: couponLoading 
+  } = useCoupons();
+  const [couponCode, setCouponCode] = useState("");
+
   const emitCartUpdate = () => {
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("cart:updated"));
@@ -131,7 +141,35 @@ export default function CartPage() {
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const deliveryFee = 0;
-  const total = subtotal + deliveryFee;
+  
+  // Use discount from appliedCoupon response if available, otherwise calculate from percentage
+  const discount = useMemo(() => {
+    if (!appliedCoupon) return 0;
+    if (typeof appliedCoupon.discount === 'number') return appliedCoupon.discount;
+    if (typeof appliedCoupon.amount === 'number') return appliedCoupon.amount;
+    if (typeof appliedCoupon.percentage === 'number') return subtotal * (appliedCoupon.percentage / 100);
+    return 0;
+  }, [appliedCoupon, subtotal]);
+
+  // Use updatedTotal from appliedCoupon if available, otherwise calculate manually
+  const total = useMemo(() => {
+    if (appliedCoupon && typeof appliedCoupon.updatedTotal === 'number') {
+      return appliedCoupon.updatedTotal + deliveryFee;
+    }
+    return subtotal + deliveryFee - discount;
+  }, [appliedCoupon, subtotal, deliveryFee, discount]);
+
+  const handleApplyCoupon = async (e) => {
+    e.preventDefault();
+    const orderTotal = subtotal + deliveryFee;
+    const code = couponCode.trim();
+    try {
+      await applyCoupon(code, orderTotal);
+      setCouponCode("");
+    } catch (err) {
+      // Error handled by hook
+    }
+  };
 
   const handleQuantityChange = async (item, nextQty) => {
     if (!item.productId || nextQty < 1) return;
@@ -260,11 +298,45 @@ export default function CartPage() {
           {/* Summary */}
           <aside className="space-y-6">
             <div className="border border-neutral-200 bg-white p-8">
+              {/* Coupon Section */}
+              <div className="mb-6 border-b border-neutral-100 pb-6">
+                <Label className="mb-3 block text-[12px] uppercase tracking-wider">Apply Coupon</Label>
+                <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    placeholder="Enter code"
+                    className="flex-1 border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                  />
+                  <button
+                    type="submit"
+                    disabled={couponLoading}
+                    className="bg-black px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-white disabled:bg-neutral-300"
+                  >
+                    Apply
+                  </button>
+                </form>
+                {couponError && <p className="mt-2 text-[11px] text-red-500">{couponError}</p>}
+                {appliedCoupon && (
+                  <div className="mt-3 flex items-center justify-between rounded bg-green-50 p-2 text-[11px] text-green-700">
+                    <span>Coupon <strong>{appliedCoupon.code}</strong> applied!</span>
+                    <button onClick={removeCoupon} className="font-bold underline">Remove</button>
+                  </div>
+                )}
+              </div>
+
               <div className="mt-6 space-y-3 text-[13px] text-[#20262B]">
                 <div className="flex items-center justify-between">
                   <span>Order Value</span>
                   <span>Rs.{subtotal}</span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex items-center justify-between text-green-600 font-medium">
+                    <span>Discount</span>
+                    <span>- Rs.{discount}</span>
+                  </div>
+                )}
               </div>
 
               <div className="mt-10 flex items-center justify-between">

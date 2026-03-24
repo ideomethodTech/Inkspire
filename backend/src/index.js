@@ -12,6 +12,11 @@ import orderRoutes from './routes/order.routes.js';
 import contentRoutes from './routes/content.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import protectedRoutes from './routes/protected.routes.js';
+import reviewRoutes from './routes/review.routes.js';
+import couponRoutes from './routes/coupon.routes.js';
+import adminCouponRoutes from './routes/admin.coupon.routes.js';
+import addressRoutes from './routes/address.routes.js';
+import newsletterRoutes from './routes/newsletter.routes.js';
 
 // Database connection
 import connectDB from './config/mongodb.js';
@@ -27,12 +32,19 @@ app.use(express.json());
 // Routes
 app.use('/auth', authRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/admin', adminProductRoutes);
+app.use('/api/admin', adminProductRoutes); // Admin Products
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/protected', protectedRoutes);
-app.use('/admin', adminRoutes);
+app.use('/admin', adminRoutes); // Admin Dashboard
+
+// New Feature Routes
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/coupons', couponRoutes);
+app.use('/api/admin/coupons', adminCouponRoutes);
+app.use('/api/address', addressRoutes);
+app.use('/api/newsletter', newsletterRoutes);
 
 // Health Check
 app.get('/health', async (req, res) => {
@@ -54,7 +66,10 @@ app.get('/health', async (req, res) => {
         products: 'ready',
         cart: 'ready',
         orders: 'ready',
-        admin: 'ready'
+        admin: 'ready',
+        reviews: 'ready',
+        coupons: 'ready',
+        newsletter: 'ready'
       },
       environment: process.env.NODE_ENV || 'development'
     });
@@ -96,10 +111,13 @@ const startServer = async () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📚 Health check: http://localhost:${PORT}/health`);
     console.log(`🛍️ Products API: http://localhost:${PORT}/api/products`);
-    console.log(`🛍️ Admin Products API: http://localhost:${PORT}/api/admin/products`);
+    console.log(`⭐ Reviews API: http://localhost:${PORT}/api/reviews`);
+    console.log(`🎟️ Coupons API: http://localhost:${PORT}/api/coupons`);
     console.log(`🛒 Cart API: http://localhost:${PORT}/api/cart`);
     console.log(`📦 Orders API: http://localhost:${PORT}/api/orders`);
     console.log(`🔐 Auth API: http://localhost:${PORT}/auth`);
+    console.log(`📍 Address API: http://localhost:${PORT}/api/address`);
+    console.log(`📧 Newsletter API: http://localhost:${PORT}/api/newsletter`);
     console.log(`👑 Admin Dashboard: http://localhost:${PORT}/admin`);
   });
 };

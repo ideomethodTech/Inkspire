@@ -1,6 +1,7 @@
 import Order from '../../models/mongo/order.model.js';
 import Cart from '../../models/mongo/cart.model.js';
 import Product from '../../models/mongo/product.model.js';
+import Coupon from '../../models/mongo/coupon.model.js';
 import mongoose from 'mongoose';
 
 export class OrderService {
@@ -27,7 +28,7 @@ export class OrderService {
     }
 
     // Create order from cart (Checkout)
-    static async createOrder(userId, userEmail, userName, shippingAddress, paymentMethod = 'cod', notes = '') {
+    static async createOrder(userId, userEmail, userName, shippingAddress, paymentMethod = 'cod', notes = '', couponCode = null) {
         const session = await mongoose.startSession();
         session.startTransaction();
 
@@ -73,15 +74,44 @@ export class OrderService {
                 subtotal += itemTotal;
             }
 
-            // 3. Calculate totals
-            const shipping = subtotal > 500 ? 0 : 50; // Free shipping above ₹500
-            const tax = subtotal * 0.18; // 18% GST
-            const total = subtotal + shipping + tax;
+            // 3. Coupon Logic
+            let discount = 0;
+            let couponApplied = null;
 
-            // 4. Generate order number
+            if (couponCode) {
+                const coupon = await Coupon.findOne({ code: couponCode.toUpperCase() }).session(session);
+                if (!coupon) {
+                    throw new Error('Invalid coupon code');
+                }
+                
+                // Manual validation since we are inside a transaction/session context
+                const validation = coupon.isValid(userId, subtotal);
+                if (!validation.valid) {
+                    throw new Error(validation.reason);
+                }
+
+                discount = coupon.calculateDiscount(subtotal);
+                discount = Math.min(discount, subtotal); // Ensure discount <= subtotal
+                
+                couponApplied = {
+                    code: coupon.code,
+                    discount: discount
+                };
+
+                // Increment usage count
+                coupon.usedCount += 1;
+                await coupon.save({ session });
+            }
+
+            // 4. Calculate totals
+            const shipping = subtotal > 500 ? 0 : 50; // Free shipping above ₹500
+            const tax = (subtotal - discount) * 0.18; // 18% GST on discounted price? Or subtotal? Usually discounted.
+            const total = (subtotal - discount) + shipping + tax;
+
+            // 5. Generate order number
             const orderNumber = await this.generateOrderNumber();
 
-            // 5. Create order
+            // 6. Create order
             const order = new Order({
                 orderNumber,
                 user: {
@@ -93,15 +123,16 @@ export class OrderService {
                 shippingAddress,
                 paymentMethod: {
                     method: paymentMethod,
-                    status: paymentMethod === 'cod' ? 'pending' : 'pending'
+                    status: paymentMethod === 'cod' ? 'pending' : 'pending' // Integrate payment gateway later
                 },
                 totals: {
                     subtotal,
                     shipping,
                     tax,
-                    discount: 0,
+                    discount,
                     total
                 },
+                coupon: couponApplied,
                 status: {
                     current: 'pending',
                     history: [{
@@ -110,12 +141,20 @@ export class OrderService {
                         note: 'Order placed'
                     }]
                 },
+                tracking: {
+                    currentStatus: 'processing',
+                    history: [{
+                        status: 'processing',
+                        timestamp: new Date(),
+                        note: 'Order processing started'
+                    }]
+                },
                 notes
             });
 
             await order.save({ session });
 
-            // 6. Reduce product stock
+            // 7. Reduce product stock
             for (const item of orderItems) {
                 const product = await Product.findById(item.productId).session(session);
 
@@ -125,17 +164,17 @@ export class OrderService {
                 }
             }
 
-            // 7. Clear cart
+            // 8. Clear cart
             await Cart.findOneAndUpdate(
                 { userId },
                 { items: [], total: 0, itemCount: 0 },
                 { session }
             );
 
-            // 8. Update trending products (async, don't wait)
-            this.updateTrendingProducts().catch(err => console.error('Trending update error:', err));
-
             await session.commitTransaction();
+
+            // 9. Update trending products (async, don't wait)
+            this.updateTrendingProducts().catch(err => console.error('Trending update error:', err));
 
             return {
                 success: true,
@@ -145,6 +184,7 @@ export class OrderService {
                     orderNumber: order.orderNumber,
                     total: order.totals.total,
                     status: order.status.current,
+                    trackingId: order.tracking?.trackingId,
                     items: order.items.length,
                     estimatedDelivery: this.calculateEstimatedDelivery()
                 }
@@ -183,6 +223,7 @@ export class OrderService {
                 })),
                 total: order.totals.total,
                 status: order.status.current,
+                trackingStatus: order.tracking?.currentStatus,
                 createdAt: order.createdAt,
                 shippingAddress: order.shippingAddress
             }));
@@ -222,7 +263,9 @@ export class OrderService {
                     shippingAddress: order.shippingAddress,
                     paymentMethod: order.paymentMethod,
                     totals: order.totals,
+                    coupon: order.coupon,
                     status: order.status,
+                    tracking: order.tracking,
                     notes: order.notes,
                     createdAt: order.createdAt,
                     updatedAt: order.updatedAt
@@ -335,6 +378,62 @@ export class OrderService {
             };
         } catch (error) {
             throw new Error(`Failed to update order status: ${error.message}`);
+        }
+    }
+
+    // NEW: Update Order Tracking (Admin)
+    static async updateOrderTracking(orderId, trackingData) {
+        try {
+            const { trackingId, carrier, status, location, note } = trackingData;
+            
+            const order = await Order.findById(orderId);
+            if (!order) throw new Error('Order not found');
+
+            if (trackingId) order.tracking.trackingId = trackingId;
+            if (carrier) order.tracking.carrier = carrier;
+            if (status) order.tracking.currentStatus = status;
+
+            order.tracking.history.push({
+                status: status || order.tracking.currentStatus,
+                location: location || '',
+                note: note || 'Tracking update',
+                timestamp: new Date()
+            });
+
+            // Sync main status if logical
+            if (status === 'delivered') {
+                order.status.current = 'delivered';
+                order.status.history.push({ status: 'delivered', timestamp: new Date(), note: 'Delivered (Tracking Auto-update)' });
+            } else if (status === 'shipped' && order.status.current !== 'shipped') {
+                order.status.current = 'shipped';
+                order.status.history.push({ status: 'shipped', timestamp: new Date(), note: 'Shipped (Tracking Auto-update)' });
+            }
+
+            await order.save();
+
+            return {
+                success: true,
+                message: 'Tracking updated',
+                tracking: order.tracking
+            };
+        } catch (error) {
+            throw new Error(`Failed to update tracking: ${error.message}`);
+        }
+    }
+
+    // NEW: Get Order Tracking
+    static async getOrderTracking(orderId) {
+        try {
+            const order = await Order.findById(orderId).select('tracking orderNumber');
+            if (!order) throw new Error('Order not found');
+
+            return {
+                success: true,
+                orderNumber: order.orderNumber,
+                tracking: order.tracking
+            };
+        } catch (error) {
+            throw new Error(`Failed to get tracking: ${error.message}`);
         }
     }
 

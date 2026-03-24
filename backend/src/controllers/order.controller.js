@@ -8,7 +8,7 @@ export class OrderController {
             const userEmail = req.user.email;
             const userName = req.user.displayName || req.user.email;
 
-            const { shippingAddress, paymentMethod = 'cod', notes = '' } = req.body;
+            const { shippingAddress, paymentMethod = 'cod', notes = '', couponCode = null } = req.body;
 
             // Validate shipping address
             if (!shippingAddress || !shippingAddress.name || !shippingAddress.street ||
@@ -26,7 +26,8 @@ export class OrderController {
                 userName,
                 shippingAddress,
                 paymentMethod,
-                notes
+                notes,
+                couponCode
             );
 
             return res.status(201).json(result);
@@ -143,6 +144,38 @@ export class OrderController {
             return res.status(500).json({
                 success: false,
                 message: error.message || 'Failed to update order status'
+            });
+        }
+    }
+
+    // Get order tracking
+    static async getOrderTracking(req, res) {
+        try {
+            const { orderId } = req.params;
+            const result = await OrderService.getOrderTracking(orderId);
+            return res.status(200).json(result);
+        } catch (error) {
+            console.error('[GET TRACKING] Error:', error);
+            const status = error.message?.includes('not found') ? 404 : 500;
+            return res.status(status).json({
+                success: false,
+                message: error.message || 'Failed to get tracking'
+            });
+        }
+    }
+
+    // Update order tracking (Admin)
+    static async updateOrderTracking(req, res) {
+        try {
+            const { orderId } = req.params;
+            const result = await OrderService.updateOrderTracking(orderId, req.body);
+            return res.status(200).json(result);
+        } catch (error) {
+            console.error('[UPDATE TRACKING] Error:', error);
+            const status = error.message?.includes('not found') ? 404 : 500;
+            return res.status(status).json({
+                success: false,
+                message: error.message || 'Failed to update tracking'
             });
         }
     }

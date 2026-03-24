@@ -14,8 +14,14 @@ router.get('/', OrderController.getUserOrders);
 router.get('/:orderId', OrderController.getOrderById);
 router.put('/:orderId/cancel', OrderController.cancelOrder);
 
+// Tracking (User)
+router.get('/:orderId/tracking', OrderController.getOrderTracking);
+
 // Admin order routes
 router.get('/admin/all', adminOnly, OrderController.getAllOrders);
 router.put('/admin/:orderId', adminOnly, OrderController.updateOrderStatus);
+
+// Tracking (Admin)
+router.put('/admin/:orderId/tracking', adminOnly, OrderController.updateOrderTracking);
 
 export default router;

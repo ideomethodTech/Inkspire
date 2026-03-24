@@ -9,22 +9,7 @@ export class ProductService {
 
       return {
         success: true,
-        data: {
-          id: product._id,
-          name: product.name,
-          type: product.type,
-          category: product.category,
-          price: product.price,
-          description: product.description,
-          variants: product.variants,
-          images: product.images,
-          tags: product.tags,
-          featured: product.featured,
-          trending: product.trending,
-          bestseller: product.bestseller,
-          createdAt: product.createdAt,
-          updatedAt: product.updatedAt
-        }
+        data: this.formatProduct(product)
       };
     } catch (error) {
       throw new Error(`Failed to create product: ${error.message}`);
@@ -92,6 +77,9 @@ export class ProductService {
           // Sort by multiple factors: trending > bestseller > featured > newest
           sortOption = { trending: -1, bestseller: -1, featured: -1, createdAt: -1 };
           break;
+        case 'rating': // Added rating sort
+          sortOption = { averageRating: -1, totalReviews: -1 };
+          break;
         case 'name_asc':
           sortOption = { name: 1 };
           break;
@@ -113,27 +101,10 @@ export class ProductService {
         Product.countDocuments(query)
       ]);
 
-      const formattedProducts = products.map(product => ({
-        id: product._id,
-        name: product.name,
-        type: product.type,
-        category: product.category,
-        price: product.price,
-        description: product.description,
-        variants: product.variants,
-        images: product.images,
-        tags: product.tags,
-        featured: product.featured,
-        trending: product.trending,
-        bestseller: product.bestseller,
-        createdAt: product.createdAt,
-        updatedAt: product.updatedAt
-      }));
-
       return {
         success: true,
         data: {
-          products: formattedProducts,
+          products: products.map(this.formatProduct),
           total,
           page: parseInt(page),
           limit: parseInt(limit),
@@ -166,22 +137,7 @@ export class ProductService {
 
       return {
         success: true,
-        data: {
-          id: product._id,
-          name: product.name,
-          type: product.type,
-          category: product.category,
-          price: product.price,
-          description: product.description,
-          variants: product.variants,
-          images: product.images,
-          tags: product.tags,
-          featured: product.featured,
-          trending: product.trending,
-          bestseller: product.bestseller,
-          createdAt: product.createdAt,
-          updatedAt: product.updatedAt
-        }
+        data: this.formatProduct(product)
       };
     } catch (error) {
       throw new Error(`Failed to fetch product: ${error.message}`);
@@ -205,27 +161,10 @@ export class ProductService {
         .limit(parseInt(limit))
         .lean();
 
-      const formattedProducts = products.map(product => ({
-        id: product._id,
-        name: product.name,
-        type: product.type,
-        category: product.category,
-        price: product.price,
-        description: product.description,
-        variants: product.variants,
-        images: product.images,
-        tags: product.tags,
-        featured: product.featured,
-        trending: product.trending,
-        bestseller: product.bestseller,
-        createdAt: product.createdAt,
-        updatedAt: product.updatedAt
-      }));
-
       return {
         success: true,
         data: {
-          products: formattedProducts,
+          products: products.map(this.formatProduct),
           total: products.length
         }
       };
@@ -259,27 +198,10 @@ export class ProductService {
         .limit(parseInt(limit))
         .lean();
 
-      const formattedProducts = products.map(product => ({
-        id: product._id,
-        name: product.name,
-        type: product.type,
-        category: product.category,
-        price: product.price,
-        description: product.description,
-        variants: product.variants,
-        images: product.images,
-        tags: product.tags,
-        featured: product.featured,
-        trending: product.trending,
-        bestseller: product.bestseller,
-        createdAt: product.createdAt,
-        updatedAt: product.updatedAt
-      }));
-
       return {
         success: true,
         data: {
-          products: formattedProducts,
+          products: products.map(this.formatProduct),
           total: products.length
         }
       };
@@ -291,41 +213,23 @@ export class ProductService {
   // Get homepage sections
   static async getHomepageSections() {
     try {
-      const [featured, trending, bestsellers, newArrivals] = await Promise.all([
+      const [featured, trending, bestsellers, newArrivals, highestRated] = await Promise.all([
         Product.find({ featured: true, active: true }).limit(8).lean(),
         Product.find({ trending: true, active: true }).limit(8).lean(),
         Product.find({ bestseller: true, active: true }).limit(8).lean(),
-        Product.find({ active: true })
-          .sort({ createdAt: -1 })
-          .limit(8)
-          .lean()
+        Product.find({ active: true }).sort({ createdAt: -1 }).limit(8).lean(),
+        // New: Highest Rated for Homepage
+        Product.find({ active: true, averageRating: { $gte: 4 } }).sort({ averageRating: -1, totalReviews: -1 }).limit(8).lean()
       ]);
-
-      const formatProducts = (products) =>
-        products.map(product => ({
-          id: product._id,
-          name: product.name,
-          type: product.type,
-          category: product.category,
-          price: product.price,
-          description: product.description,
-          variants: product.variants,
-          images: product.images,
-          tags: product.tags,
-          featured: product.featured,
-          trending: product.trending,
-          bestseller: product.bestseller,
-          createdAt: product.createdAt,
-          updatedAt: product.updatedAt
-        }));
 
       return {
         success: true,
         data: {
-          featured: formatProducts(featured),
-          trending: formatProducts(trending),
-          bestsellers: formatProducts(bestsellers),
-          newArrivals: formatProducts(newArrivals)
+          featured: featured.map(this.formatProduct),
+          trending: trending.map(this.formatProduct),
+          bestsellers: bestsellers.map(this.formatProduct),
+          newArrivals: newArrivals.map(this.formatProduct),
+          highestRated: highestRated.map(this.formatProduct)
         }
       };
     } catch (error) {
@@ -350,22 +254,7 @@ export class ProductService {
 
       return {
         success: true,
-        data: {
-          id: product._id,
-          name: product.name,
-          type: product.type,
-          category: product.category,
-          price: product.price,
-          description: product.description,
-          variants: product.variants,
-          images: product.images,
-          tags: product.tags,
-          featured: product.featured,
-          trending: product.trending,
-          bestseller: product.bestseller,
-          createdAt: product.createdAt,
-          updatedAt: product.updatedAt
-        }
+        data: this.formatProduct(product)
       };
     } catch (error) {
       throw new Error(`Failed to update product: ${error.message}`);
@@ -442,6 +331,7 @@ export class ProductService {
             { value: 'price_asc', label: 'Price: Low to High' },
             { value: 'price_desc', label: 'Price: High to Low' },
             { value: 'popular', label: 'Most Popular' },
+            { value: 'rating', label: 'Highest Rated' },
             { value: 'name_asc', label: 'Name: A to Z' },
             { value: 'name_desc', label: 'Name: Z to A' }
           ]
@@ -450,5 +340,27 @@ export class ProductService {
     } catch (error) {
       throw new Error(`Failed to get available filters: ${error.message}`);
     }
+  }
+
+  // Helper to format product data consistently
+  static formatProduct(product) {
+    return {
+      id: product._id,
+      name: product.name,
+      type: product.type,
+      category: product.category,
+      price: product.price,
+      description: product.description,
+      variants: product.variants,
+      images: product.images,
+      tags: product.tags,
+      featured: product.featured,
+      trending: product.trending,
+      bestseller: product.bestseller,
+      averageRating: product.averageRating || 0,
+      totalReviews: product.totalReviews || 0,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt
+    };
   }
 }

@@ -109,6 +109,25 @@ const orderSchema = new mongoose.Schema({
             required: true
         }
     },
+    coupon: {
+        code: String,
+        discount: Number
+    },
+    tracking: {
+        trackingId: String,
+        carrier: String,
+        currentStatus: {
+            type: String,
+            enum: ['processing', 'shipped', 'out_for_delivery', 'delivered'],
+            default: 'processing'
+        },
+        history: [{
+            status: String,
+            timestamp: { type: Date, default: Date.now },
+            location: String,
+            note: String
+        }]
+    },
     status: {
         current: {
             type: String,

@@ -24,7 +24,8 @@ const userSchema = new mongoose.Schema({
   displayName: String,
   photoURL: String,
   phoneNumber: String,
-  
+  dob: Date,
+
   role: { 
     type: String, 
     enum: ['user', 'admin'], 
@@ -36,6 +37,18 @@ const userSchema = new mongoose.Schema({
     default: false 
   },
   
+  addresses: [{
+    name: String,
+    phone: String,
+    addressLine: String,
+    city: String,
+    state: String,
+    zip: String,
+    country: { type: String, default: 'India' },
+    isDefault: { type: Boolean, default: false }
+  }],
+
+  // Backward compatibility for single address
   shippingAddress: {
     street: String,
     city: String,

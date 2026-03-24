@@ -1,0 +1,315 @@
+using mongo db for data base 
+
+
+--- PHASE 1 BACKEND COMPLETE - API DOCUMENTATION FOR FRONTEND INTEGRATION
+--- OVERVIEW
+The Inkspire backend is now 100% ready for Phase 1 frontend integration. All core e-commerce features have been implemented and thoroughly tested.
+
+Key Features Ready:
+---- User Authentication with JWT (7-day expiry)
+
+1. Role-based access (admin/user separation)
+
+2. Complete Product Catalog with advanced filtering & search
+
+3. Full Cart System (add, update, remove, clear)
+
+4. End-to-End Order Flow (COD checkout → history → cancellation)
+
+5. Homepage Content (hero banners, trending products, featured sections)
+
+6. Consistent API Response Format
+
+--- BASE URL
+text
+http://localhost:4000
+(Will update to production URL when deployed)
+
+--- AUTHENTICATION FLOW
+Step 1: Firebase Login (Frontend)
+bash
+POST https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBQx5LNsqoa6FNzLp0Mzh2nLimSGDYdtXQ
+json
+{
+  "email": "user@example.com",
+  "password": "password",
+  "returnSecureToken": true
+}
+Save the idToken from response
+
+Step 2: Exchange for App JWT
+bash
+POST /auth/login
+json
+{
+  "idToken": "firebase-id-token-here"
+}
+Response:
+
+json
+{
+  "success": true,
+  "message": "Login successful",
+  "token": "eyJhbGciOiJIUzI1NiIs...", // YOUR JWT TOKEN
+  "user": {
+    "userId": "69612e758881302b9aefcd01",
+    "email": "testuser1@gmail.com",
+    "role": "user",
+    "displayName": "",
+    "photoURL": ""
+  }
+}
+Step 3: Use JWT for All Protected Routes
+text
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+(Include this header for all routes below except public ones)
+
+--- PUBLIC APIS (No Auth Required)
+1. Health Check
+bash
+GET /health
+Response: Returns service status (MongoDB, Firebase, all modules)
+
+2. Product Catalog
+bash
+GET /api/products
+Query Parameters:
+
+page=1 (Pagination)
+
+limit=10 (Items per page, max: 50)
+
+category=Art|Nature (Filter by category)
+
+type=poster|kit|sticker (Filter by type)
+
+minPrice=100&maxPrice=1000 (Price range)
+
+tags=nature,mountain (Comma-separated tags)
+
+sort=newest|price_asc|price_desc|popular|name_asc|name_desc
+
+3. Search Products
+bash
+GET /api/products/search?q=mountain
+4. Get Single Product
+bash
+GET /api/products/:productId
+5. Get Homepage Sections
+bash
+GET /api/products/homepage
+Returns: featured, trending, bestsellers, newArrivals
+
+6. Get Available Filters (For UI Dropdowns)
+bash
+GET /api/products/filters
+Returns: All categories, types, tags, price range, sort options
+
+7. Get Categories List
+bash
+GET /api/products/categories
+Returns: ["Art", "Nature"]
+
+8. Get Hero Banners
+bash
+GET /api/content/hero
+9. Get Trending Products
+bash
+GET /api/content/trending
+🛒 CART APIS (Authentication Required)
+1. View Cart
+bash
+GET /api/cart
+2. Add Item to Cart
+bash
+POST /api/cart/add
+json
+{
+  "productId": "6963f8ba204fb5a0e332f439",
+  "variantIndex": 0,
+  "quantity": 2
+}
+3. Update Item Quantity
+bash
+PUT /api/cart/:productId
+json
+{
+  "variantIndex": 0,
+  "quantity": 3
+}
+4. Remove Item from Cart
+bash
+DELETE /api/cart/:productId
+json
+{
+  "variantIndex": 0
+}
+5. Clear Entire Cart
+bash
+DELETE /api/cart
+Note: Cart is automatically cleared after successful order creation.
+
+--- ORDER APIS (Authentication Required)
+1. Create Order (Checkout)
+bash
+POST /api/orders
+json
+{
+  "shippingAddress": {
+    "name": "John Doe",
+    "street": "123 Main St",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "zipCode": "400001",
+    "phone": "9876543210",
+    "country": "India"
+  },
+  "paymentMethod": "cod",
+  "notes": "Leave at gate"
+}
+Response:
+
+json
+{
+  "success": true,
+  "data": {
+    "orderId": "6964f5c44788a27c9a1d7c6d",
+    "orderNumber": "ORD-20260112-001",
+    "total": 705.64,
+    "status": "pending",
+    "estimatedDelivery": "2026-01-17"
+  }
+}
+2. Get Order History
+bash
+GET /api/orders
+Query Parameters: ?page=1&limit=10
+
+3. Get Order Details
+bash
+GET /api/orders/:orderId
+4. Cancel Order
+bash
+PUT /api/orders/:orderId/cancel
+(Only works for pending orders)
+
+--- USER PROFILE APIS (Authentication Required)
+1. Get User Profile
+bash
+GET /protected/profile
+👑 ADMIN APIS (Admin Role Required)
+1. Admin Dashboard
+bash
+GET /admin/dashboard
+2. Product Management
+bash
+POST   /api/admin/products        # Create product
+PUT    /api/admin/products/:id    # Update product
+GET    /api/admin/products        # List all products (admin view)
+3. Order Management
+bash
+GET    /api/orders/admin/all      # View all orders
+PUT    /api/orders/admin/:id      # Update order status
+4. Content Management
+bash
+POST   /api/content/admin/hero    # Create hero banner
+PUT    /api/content/admin/hero/:id # Update banner
+DELETE /api/content/admin/hero/:id # Delete banner
+Note: Non-admin users get {"message":"Admin access only ❌"}
+
+📝 RESPONSE FORMAT
+Success Response:
+json
+{
+  "success": true,
+  "message": "Operation successful",
+  "data": { ... }
+}
+Error Response:
+json
+{
+  "success": false,
+  "message": "Descriptive error message"
+}
+Common Error Messages:
+"Authentication failed" - Invalid/missing JWT
+
+"Insufficient stock" - Not enough quantity available
+
+"Cart is empty" - No items in cart
+
+"Order not found" - Invalid order ID
+
+"Admin access only ❌" - User lacks admin role
+
+--- FRONTEND INTEGRATION NOTES
+1. Cart Management
+Use variantIndex (0, 1, 2...) not _id for variants
+
+Always check product.variants[].stock before allowing quantity selection
+
+After order creation, cart will be empty - refetch it
+
+2. Order Flow
+Payment method is cod (Cash on Delivery) only in Phase 1
+
+Shipping is free for orders above ₹500
+
+18% GST is automatically calculated
+
+Order numbers follow format: ORD-YYYYMMDD-XXX
+
+3. Trending Products
+Auto-updates based on last 7 days sales
+
+Products become trending after being purchased
+
+4. Filtering UI
+Use /api/products/filters to populate dropdowns dynamically
+
+All filters can be combined: ?category=Art&minPrice=100&maxPrice=1000&tags=nature&sort=price_asc
+
+5. Authentication
+JWT expires in 7 days
+
+Store token securely (localStorage/sessionStorage)
+
+Include in header: Authorization: Bearer <token>
+
+6. Testing Credentials
+bash
+Email: testuser1@gmail.com
+Password: Test@12345
+Role: Admin (can test both user and admin flows)
+--- QUICK TESTING WORKFLOW
+bash
+# 1. Check backend health
+curl http://localhost:4000/health
+
+# 2. Browse products
+curl "http://localhost:4000/api/products?category=Art&limit=3"
+
+# 3. Get filters for UI
+curl http://localhost:4000/api/products/filters
+
+# 4. Test complete flow (with auth token):
+# Login → Add to cart → Update cart → Checkout → View orders
+--- READY FOR INTEGRATION
+Frontend Components That Can Now Be Built:
+Homepage - Hero banners, featured/trending/bestseller sections
+
+Product Listing - With advanced filtering and sorting
+
+Product Details Page - With variant selection
+
+Shopping Cart - Full CRUD operations
+
+Checkout Flow - Address collection → Order confirmation
+
+Order History - User's purchase history
+
+User Profile - Personal details and order tracking
+
+Admin Dashboard - Product & order management (basic)
+
+------

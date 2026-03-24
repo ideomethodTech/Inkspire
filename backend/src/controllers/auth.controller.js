@@ -7,7 +7,7 @@ import User from "../models/mongo/user.model.js";
  */
 export const register = async (req, res) => {
   try {
-    const { email, password, displayName } = req.body;
+    const { email, password, displayName, dob, phoneNumber } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ 
@@ -21,6 +21,7 @@ export const register = async (req, res) => {
       email,
       password,
       displayName: displayName || email.split('@')[0],
+      phoneNumber: phoneNumber || undefined, // Firebase requires specific format or undefined
       emailVerified: false
     });
 
@@ -29,6 +30,8 @@ export const register = async (req, res) => {
       firebaseUid: userRecord.uid,
       email: userRecord.email,
       displayName: userRecord.displayName || email.split('@')[0],
+      phoneNumber: phoneNumber,
+      dob: dob ? new Date(dob) : undefined,
       authProvider: 'password',
       role: 'user',
       emailVerified: false
@@ -66,6 +69,12 @@ export const register = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Email already exists"
+      });
+    }
+    if (error.code === 'auth/invalid-phone-number') {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid phone number format"
       });
     }
     
@@ -107,6 +116,7 @@ export const login = async (req, res) => {
     const photoURL = decodedToken.picture || '';
     const authProvider = decodedToken.firebase?.sign_in_provider || 'password';
     const emailVerified = decodedToken.email_verified || false;
+    const phoneNumber = decodedToken.phone_number || undefined;
 
     // 2. Sync user to MongoDB (create or update)
     let user = await User.findOne({ firebaseUid });
@@ -118,6 +128,7 @@ export const login = async (req, res) => {
         email,
         displayName,
         photoURL,
+        phoneNumber,
         authProvider,
         emailVerified,
         role: 'user'
@@ -128,6 +139,7 @@ export const login = async (req, res) => {
       // Update existing user
       user.displayName = displayName || user.displayName;
       user.photoURL = photoURL || user.photoURL;
+      if (phoneNumber && !user.phoneNumber) user.phoneNumber = phoneNumber; // Only update if missing to avoid overwriting custom input
       user.authProvider = authProvider;
       user.emailVerified = emailVerified;
       user.lastLoginAt = new Date();
@@ -200,9 +212,12 @@ export const getProfile = async (req, res) => {
         email: user.email,
         displayName: user.displayName,
         photoURL: user.photoURL,
+        phoneNumber: user.phoneNumber,
+        dob: user.dob,
         role: user.role,
         emailVerified: user.emailVerified,
         authProvider: user.authProvider,
+        addresses: user.addresses,
         createdAt: user.createdAt,
         lastLoginAt: user.lastLoginAt
       }
@@ -212,6 +227,57 @@ export const getProfile = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Internal server error"
+    });
+  }
+};
+
+/**
+ * UPDATE USER PROFILE
+ */
+export const updateProfile = async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const { displayName, phoneNumber, dob, photoURL } = req.body;
+
+    const updateData = {};
+    if (displayName !== undefined) updateData.displayName = displayName;
+    if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
+    if (dob !== undefined) updateData.dob = dob;
+    if (photoURL !== undefined) updateData.photoURL = photoURL;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select('-__v');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        userId: user._id,
+        firebaseUid: user.firebaseUid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        phoneNumber: user.phoneNumber,
+        dob: user.dob,
+        role: user.role,
+        addresses: user.addresses
+      }
+    });
+  } catch (error) {
+    console.error("Update Profile Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update profile"
     });
   }
 };

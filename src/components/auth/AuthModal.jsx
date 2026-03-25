@@ -12,6 +12,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  updateProfile,
 } from "firebase/auth";
 
 export default function AuthModal({ initialMode = "email", onClose }) {
@@ -19,104 +20,113 @@ export default function AuthModal({ initialMode = "email", onClose }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // profile fields (NO ADDRESS NOW)
+  const [name, setName] = useState("");
+  const [dob, setDob] = useState("");
+  const [phone, setPhone] = useState("");
+
   const googleProvider = new GoogleAuthProvider();
 
-  // --- Handle "Continue" from email step ---
+  // --- Email continue ---
   const handleEmailContinue = async () => {
     if (!email) return alert("Please enter an email");
     setLoading(true);
 
     try {
-      const response = await fetch(
+      const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/auth/check-email?email=${email}`
       );
-      const data = await response.json();
+
+      const data = await res.json();
       setMode(data.isExistingUser ? "signin" : "signup");
     } catch (err) {
-      console.error("Error checking email:", err);
-      alert("Something went wrong. Try again.");
+      alert("Something went wrong");
     } finally {
       setLoading(false);
     }
   };
 
-  // --- Handle login ---
+  // --- LOGIN ---
   const handleLogin = async () => {
-    if (!password) return alert("Please enter your password");
+    if (!password) return alert("Enter password");
     setLoading(true);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await cred.user.getIdToken();
 
-      const idToken = await userCredential.user.getIdToken();
       const data = await realLoginUser(idToken);
 
+      // ⭐ store ONLY what backend returns
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
       window.location.href = "/user/profile";
-    } catch (error) {
-      console.error("Login failed:", error);
-      alert(error.message || "Login failed");
+    } catch (err) {
+      alert(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
-  // --- Handle signup ---
+  // --- SIGNUP ---
   const handleSignup = async () => {
-    if (!password) return alert("Please enter a password");
+    if (!password) return alert("Enter password");
     setLoading(true);
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
 
-      const idToken = await userCredential.user.getIdToken();
+      // set display name in firebase
+      if (name) {
+        await updateProfile(cred.user, { displayName: name });
+      }
+
+      const idToken = await cred.user.getIdToken(true);
+
+      const data = await realLoginUser(idToken);
+
+      // ⭐ store ONLY backend user
+      localStorage.setItem("token", data.token);
+
+      const userObj = {
+        ...data.user,
+        // temporary fallback until backend saves these fields
+        dob,
+        phoneNumber: phone,
+      };
+
+      localStorage.setItem("user", JSON.stringify(userObj));
+
+      window.location.href = "/user/profile";
+    } catch (err) {
+      alert(err.message || "Signup failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- GOOGLE LOGIN ---
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+
       const data = await realLoginUser(idToken);
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
       window.location.href = "/user/profile";
-    } catch (error) {
-      console.error("Signup failed:", error);
-      alert(error.message || "Signup failed");
+    } catch (err) {
+      alert("Google login failed");
     } finally {
       setLoading(false);
     }
   };
-
-  const handleGoogleLogin = async () => {
-
-     console.log("Google login clicked");
-  setLoading(true);
-
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-
-    const idToken = await result.user.getIdToken();
-
-    const data = await realLoginUser(idToken);
-
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-
-    window.location.href = "/user/profile";
-  } catch (error) {
-    console.error("Google login failed:", error);
-    alert(error.message || "Google login failed");
-  } finally {
-    setLoading(false);
-  }
-};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -125,17 +135,12 @@ export default function AuthModal({ initialMode = "email", onClose }) {
           <X className="h-5 w-5" />
         </button>
 
-        {/* EMAIL STEP */}
         {mode === "email" && (
           <>
             <h2 className="mb-2 text-sm font-semibold uppercase">
               Sign in / Create an account
             </h2>
-            <p className="mb-6 text-sm text-muted-foreground">
-              Enter your email to sign in or create a new account.
-            </p>
 
-            <label className="mb-2 block text-sm font-medium">Email *</label>
             <Input value={email} onChange={(e) => setEmail(e.target.value)} />
 
             <Button
@@ -146,102 +151,80 @@ export default function AuthModal({ initialMode = "email", onClose }) {
               {loading ? "Checking..." : "Continue"}
             </Button>
 
-            <div className="my-6 flex items-center gap-2 text-xs text-muted-foreground">
-              <div className="h-px flex-1 bg-border" />
-              OR
-              <div className="h-px flex-1 bg-border" />
-            </div>
-
-           <Button
-  variant="outline"
-  className="w-full"
-  onClick={handleGoogleLogin}
-  disabled={loading}
->
-  Continue with Google
-</Button>
-          </>
-        )}
-
-        {/* SIGN IN */}
-        {mode === "signin" && (
-          <>
-            <h2 className="mb-2 text-sm font-semibold uppercase">Sign in</h2>
-            <Input value={email} disabled />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-2"
-            />
             <Button
-              className="mt-6 w-full"
-              onClick={handleLogin}
-              disabled={loading}
+              variant="outline"
+              className="mt-4 w-full"
+              onClick={handleGoogleLogin}
             >
-              {loading ? "Signing in..." : "Continue"}
+              Continue with Google
             </Button>
           </>
         )}
 
-        {/* SIGN UP */}
+        {mode === "signin" && (
+          <>
+            <h2 className="mb-2 text-sm font-semibold uppercase">Sign in</h2>
+
+            <Input value={email} disabled />
+
+            <Input
+              type="password"
+              className="mt-3"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+
+            <Button className="mt-6 w-full" onClick={handleLogin}>
+              Continue
+            </Button>
+          </>
+        )}
+
         {mode === "signup" && (
           <>
             <h2 className="mb-2 text-sm font-semibold uppercase">
               Create an account
             </h2>
-            <p className="mb-6 text-sm text-muted-foreground">
-              Create your account to save posters, track orders, and manage your
-              profile
-            </p>
 
-            {/* Email */}
-            <label className="mb-2 block text-sm font-medium">Email *</label>
             <Input value={email} disabled />
 
-            {/* Password */}
-            <label className="mt-4 mb-2 block text-sm font-medium">
-              Create a password *
-            </label>
             <Input
               type="password"
-              placeholder="Create password"
+              className="mt-3"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <p className="mt-1 text-xs text-muted-foreground">
-              8–25 characters, 1 number, 1 uppercase, 1 lowercase
-            </p>
 
-            {/* Date of birth */}
-            <label className="mt-4 mb-2 block text-sm font-medium">
-              Date of birth *
-            </label>
-            <Input placeholder="MM / DD / YYYY" />
+            <Input
+              className="mt-3"
+              placeholder="Full name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
 
-            {/* Newsletter checkbox */}
+            <Input
+              type="date"
+              className="mt-3"
+              value={dob}
+              onChange={(e) => setDob(e.target.value)}
+            />
+
+            <Input
+              className="mt-3"
+              placeholder="Phone number"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+
             <div className="mt-4 flex items-center gap-2">
               <Checkbox />
-              <span className="text-xs">
-                Sign up for email updates and offers
-              </span>
+              <span className="text-xs">Email updates</span>
             </div>
 
-            <Button
-              className="mt-6 w-full"
-              onClick={handleSignup}
-              disabled={loading}
-            >
-              {loading ? "Creating..." : "Create account"}
-            </Button>
-
-            <Button
-              variant="outline"
-              className="mt-3 w-full"
-              onClick={() => setMode("signin")}
-            >
-              Already have an account? Sign in
+            <Button className="mt-6 w-full" onClick={handleSignup}>
+              Create account
             </Button>
           </>
         )}

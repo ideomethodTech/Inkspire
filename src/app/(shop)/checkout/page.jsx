@@ -8,24 +8,95 @@ import Button from "@/components/ui/Buttons";
 import { createOrder } from "@/api/orders";
 import { getCart } from "@/api/cart";
 import { getProductById } from "@/services";
+import { useAddress } from "@/lib/hooks/useAddress";
 
 const FALLBACK_IMAGE =
   "/products/4ad9203dd2a598811e58c6fc9a3fca19c5bccd53.jpg";
 
+const REQUIRED_ADDRESS_FIELDS = [
+  "name",
+  "phone",
+  "street",
+  "city",
+  "state",
+  "zipCode",
+];
+
+const mapAddressToForm = (address) => ({
+  name: String(address?.name || address?.fullName || "").trim(),
+  phone: String(address?.phone || address?.phoneNumber || "").trim(),
+  addressLine: String(
+    address?.addressLine ||
+      address?.street ||
+      address?.addressLine1 ||
+      address?.line1 ||
+      address?.address ||
+      ""
+  ).trim(),
+  city: String(address?.city || "").trim(),
+  state: String(address?.state || address?.province || "").trim(),
+  zip: String(
+    address?.zip ||
+      address?.zipCode ||
+      address?.postalCode ||
+      address?.pincode ||
+      ""
+  ).trim(),
+  country: String(address?.country || "India").trim(),
+});
+
+const normalizeAddressForOrder = (address) => ({
+  name: String(address?.name || address?.fullName || "").trim(),
+  phone: String(address?.phone || address?.phoneNumber || "").trim(),
+  street: String(
+    address?.street ||
+      address?.addressLine ||
+      address?.addressLine1 ||
+      address?.line1 ||
+      address?.address ||
+      ""
+  ).trim(),
+  city: String(address?.city || "").trim(),
+  state: String(address?.state || address?.province || "").trim(),
+  zipCode: String(
+    address?.zipCode ||
+      address?.zip ||
+      address?.postalCode ||
+      address?.pincode ||
+      ""
+  ).trim(),
+  country: String(address?.country || "India").trim(),
+});
+
+const hasAnyAddressInput = (address) => {
+  const normalized = normalizeAddressForOrder(address);
+  return REQUIRED_ADDRESS_FIELDS.some(
+    (field) => String(normalized?.[field] ?? "").length > 0
+  );
+};
+
+const isAddressComplete = (address) => {
+  const normalized = normalizeAddressForOrder(address);
+  return REQUIRED_ADDRESS_FIELDS.every(
+    (field) => String(normalized?.[field] ?? "").length > 0
+  );
+};
+
 export default function CheckoutPage() {
   const router = useRouter();
+  const { addresses, loading: addressesLoading } = useAddress();
   const [items, setItems] = useState([]);
   const [cartError, setCartError] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [shippingAddress, setShippingAddress] = useState({
-    name: "John Doe",
-    street: "123 Main St",
-    city: "Mumbai",
-    state: "Maharashtra",
-    zipCode: "400001",
-    phone: "9876543210",
+    name: "",
+    phone: "",
+    addressLine: "",
+    city: "",
+    state: "",
+    zip: "",
     country: "India",
   });
 
@@ -141,8 +212,21 @@ export default function CheckoutPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (addressesLoading) return;
+    if (!addresses?.length) return;
+    if (!hasAnyAddressInput(shippingAddress)) {
+      const address = addresses[0];
+      setShippingAddress(mapAddressToForm(address));
+    }
+  }, [addressesLoading, addresses, shippingAddress]);
+
   const handleChange = (key, value) => {
     setShippingAddress((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSelectAddress = (address) => {
+    setShippingAddress(mapAddressToForm(address));
   };
 
   const getErrorMessage = (err) => {
@@ -154,10 +238,15 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
-    setLoading(true);
     setMessage("");
+    if (!isAddressComplete(shippingAddress)) {
+      setMessage("Please complete your shipping address.");
+      return;
+    }
+    setLoading(true);
+    const normalizedAddress = normalizeAddressForOrder(shippingAddress);
     const orderPayload = {
-      shippingAddress,
+      shippingAddress: normalizedAddress,
       paymentMethod: "cod",
       notes,
     };
@@ -189,6 +278,33 @@ export default function CheckoutPage() {
 
         <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_420px]">
           <div className="space-y-8">
+            {/* Saved Addresses */}
+            {addresses.length > 0 && (
+              <section className="rounded-lg border border-neutral-200 bg-white p-6">
+                <Label className="text-[12px] uppercase tracking-[0.16em] text-[#6D6D6D]">
+                  Select Saved Address
+                </Label>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  {addresses.map((addr) => (
+                    <button
+                      key={addr._id || addr.id}
+                      onClick={() => handleSelectAddress(addr)}
+                      className={`flex flex-col items-start rounded-lg border p-4 text-left transition-all ${
+                        shippingAddress.addressLine === addr.addressLine
+                          ? "border-black bg-neutral-50"
+                          : "border-neutral-200 hover:border-neutral-300"
+                      }`}
+                    >
+                      <span className="font-semibold text-sm">{addr.name}</span>
+                      <span className="text-xs text-neutral-500 mt-1">{addr.addressLine}</span>
+                      <span className="text-xs text-neutral-500">{addr.city}, {addr.state} {addr.zip}</span>
+                      <span className="text-xs text-neutral-500 mt-1">{addr.phone}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
             <section className="rounded-lg border border-neutral-200 bg-white p-6">
               <Label className="text-[12px] uppercase tracking-[0.16em] text-[#6D6D6D]">
                 Shipping Address
@@ -208,9 +324,9 @@ export default function CheckoutPage() {
                 />
                 <input
                   className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm sm:col-span-2"
-                  placeholder="Street address"
-                  value={shippingAddress.street}
-                  onChange={(e) => handleChange("street", e.target.value)}
+                  placeholder="Address Line"
+                  value={shippingAddress.addressLine}
+                  onChange={(e) => handleChange("addressLine", e.target.value)}
                 />
                 <input
                   className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
@@ -227,8 +343,8 @@ export default function CheckoutPage() {
                 <input
                   className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
                   placeholder="ZIP code"
-                  value={shippingAddress.zipCode}
-                  onChange={(e) => handleChange("zipCode", e.target.value)}
+                  value={shippingAddress.zip}
+                  onChange={(e) => handleChange("zip", e.target.value)}
                 />
                 <input
                   className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"

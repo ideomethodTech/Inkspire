@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Truck, Package, Clock, CheckCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Body1, Body2, Caption, Label, Subheading2 } from "@/components/typography";
 import Button from "@/components/ui/Buttons";
 import { getOrders, getOrderDetails, cancelOrder } from "@/api/orders";
+import { useOrderTracking } from "@/lib/hooks/useOrderTracking";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -69,8 +70,8 @@ export default function OrdersPage() {
         return;
       }
       const data = await getOrders(page);
-      const apiOrders = data?.data?.orders || data?.orders || [];
-      if (!Array.isArray(apiOrders) || apiOrders.length === 0) {
+      const apiOrders = data?.data?.orders || (Array.isArray(data?.orders) ? data.orders : (Array.isArray(data) ? data : []));
+      if (apiOrders.length === 0) {
         setOrders([]);
         return;
       }
@@ -140,10 +141,24 @@ export default function OrdersPage() {
 
 
 function OrderCard({ order, onCancel }) {
+  const [showTracking, setShowTracking] = useState(false);
+  const { tracking, loading: trackingLoading } = useOrderTracking(showTracking ? order.id : null);
   const total = order.items.reduce((sum, item) => sum + item.price, 0);
 
+  const getStatusIcon = (status) => {
+    switch (status?.toUpperCase()) {
+      case "PENDING":
+      case "PLACED":
+      case "PROCESSING": return <Clock size={16} />;
+      case "SHIPPED": return <Truck size={16} />;
+      case "OUT_FOR_DELIVERY": return <Package size={16} />;
+      case "DELIVERED": return <CheckCircle size={16} />;
+      default: return <Package size={16} />;
+    }
+  };
+
   return (
-    <section className="rounded-lg bg-white p-6 shadow-sm">
+    <section className="rounded-lg bg-white p-6 shadow-sm border border-neutral-100">
       {/* Order Header */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -242,18 +257,80 @@ function OrderCard({ order, onCancel }) {
           <div className="flex items-center gap-3">
             {order.status === "PENDING" && (
               <Button
-                className="bg-white text-black border border-black hover:bg-gray-100 uppercase tracking-[0.08em]"
+                className="bg-white text-black border border-neutral-100 hover:bg-gray-50 uppercase tracking-[0.08em] text-[11px]"
                 onClick={onCancel}
               >
                 Cancel
               </Button>
             )}
-            <Button className="bg-black text-white hover:bg-gray-800 uppercase tracking-[0.08em]">
-              Details
+            <Button 
+              onClick={() => setShowTracking(!showTracking)}
+              className="bg-black text-white hover:bg-gray-800 uppercase tracking-[0.08em] text-[11px] flex items-center gap-2"
+            >
+              {showTracking ? "Hide Details" : "Details"}
+              {showTracking ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </Button>
           </div>
         </div>
       </div>
+
+      {/* Expanded Tracking Details */}
+      {showTracking && (
+        <div className="mt-6 border-t border-neutral-100 pt-6 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <Label className="text-[12px] uppercase tracking-wider text-neutral-500 mb-4 block">Tracking Information</Label>
+              {trackingLoading ? (
+                <p className="text-sm text-neutral-400">Loading tracking info...</p>
+              ) : tracking ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-neutral-50 rounded">
+                    <span className="text-sm text-neutral-600">Tracking ID</span>
+                    <span className="text-sm font-semibold">{tracking.trackingId || "N/A"}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-neutral-50 rounded">
+                    <span className="text-sm text-neutral-600">Carrier</span>
+                    <span className="text-sm font-semibold">{tracking.carrier || "BlueDart"}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-neutral-50 rounded">
+                    <span className="text-sm text-neutral-600">Last Updated</span>
+                    <span className="text-sm font-semibold">{tracking.updatedAt ? new Date(tracking.updatedAt).toLocaleString() : "Recently"}</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-neutral-400">Tracking information not yet available.</p>
+              )}
+            </div>
+
+            <div>
+              <Label className="text-[12px] uppercase tracking-wider text-neutral-500 mb-4 block">Order Timeline</Label>
+              <div className="space-y-6 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-neutral-200">
+                {(tracking?.history || [
+                  { status: "PLACED", message: "Order has been placed", date: order.createdAt || new Date() },
+                  { status: "PROCESSING", message: "Order is being processed", date: order.updatedAt || new Date() }
+                ]).map((event, idx) => (
+                  <div key={idx} className="relative pl-8">
+                    <div className={`absolute left-0 top-1 w-[22px] h-[22px] rounded-full flex items-center justify-center border-2 border-white z-10 ${
+                      idx === 0 ? "bg-black text-white" : "bg-neutral-200 text-neutral-500"
+                    }`}>
+                      {getStatusIcon(event.status)}
+                    </div>
+                    <div>
+                      <p className={`text-[13px] font-semibold ${idx === 0 ? "text-black" : "text-neutral-500"}`}>
+                        {event.status?.replace(/_/g, " ")}
+                      </p>
+                      <p className="text-[12px] text-neutral-500">{event.message}</p>
+                      <Caption className="text-[10px] text-neutral-400">
+                        {event.date ? new Date(event.date).toLocaleString() : ""}
+                      </Caption>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

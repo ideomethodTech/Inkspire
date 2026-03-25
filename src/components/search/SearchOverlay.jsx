@@ -3,43 +3,22 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { X, Search as SearchIcon, Heart } from "lucide-react";
 import { BodyXS, Caption, Label } from "@/components/typography";
+import { getProducts, searchProducts } from "@/services";
 
 const POPULAR_SEARCHES = ["MARVEL", "NEW ARRIVALS", "MARVEL"];
 
-const TRENDING_PRODUCTS = [
-    {
-        id: 1,
-        title: "LAND ROVER DEFENDER 130",
-        price: 299,
-        originalPrice: null,
-        image: "/products/4ad9203dd2a598811e58c6fc9a3fca19c5bccd53.jpg",
-        discount: "SAVE 11%",
-    },
-    {
-        id: 2,
-        title: "LAND ROVER DEFENDER 130",
-        price: 299,
-        originalPrice: 199,
-        image: "/products/509e4f2b10c9e62dfc885e829716feb3618ae498.jpg",
-        discount: null,
-    },
-    {
-        id: 3,
-        title: "LAND ROVER DEFENDER 130",
-        price: 299,
-        originalPrice: 199,
-        image: "/products/17049f4fe615334de178b8d8cbe384e4c0f7d28d.jpg",
-        discount: null,
-    },
-];
+const FALLBACK_IMAGE =
+    "/products/4ad9203dd2a598811e58c6fc9a3fca19c5bccd53.jpg";
 
 export default function SearchOverlay({ isOpen, onClose }) {
     const router = useRouter();
     const [query, setQuery] = useState("");
     const [isVisible, setIsVisible] = useState(false);
+    const [results, setResults] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         if (isOpen) {
@@ -51,6 +30,62 @@ export default function SearchOverlay({ isOpen, onClose }) {
             return () => clearTimeout(timer);
         }
     }, [isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        let active = true;
+
+        const loadTrending = async () => {
+            if (query.trim().length > 0) return;
+            try {
+                setLoading(true);
+                const { products } = await getProducts({ page: 1, limit: 4, sort: "popular" });
+                if (!active) return;
+                setResults(products || []);
+                setError("");
+            } catch (err) {
+                if (!active) return;
+                setError("Unable to load products.");
+                setResults([]);
+            } finally {
+                if (active) setLoading(false);
+            }
+        };
+
+        loadTrending();
+
+        return () => {
+            active = false;
+        };
+    }, [isOpen, query]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const term = query.trim();
+        if (term.length < 2) return;
+
+        let active = true;
+        const timer = setTimeout(async () => {
+            try {
+                setLoading(true);
+                const { products } = await searchProducts(term);
+                if (!active) return;
+                setResults(products || []);
+                setError("");
+            } catch (err) {
+                if (!active) return;
+                setError("Unable to search products.");
+                setResults([]);
+            } finally {
+                if (active) setLoading(false);
+            }
+        }, 250);
+
+        return () => {
+            active = false;
+            clearTimeout(timer);
+        };
+    }, [isOpen, query]);
 
     const handleSearch = (e) => {
         if (e.key === "Enter" || e.type === "click") {
@@ -128,26 +163,36 @@ export default function SearchOverlay({ isOpen, onClose }) {
                                 PRODUCTS
                             </Label>
                             <div className="flex flex-col gap-6">
-                                {TRENDING_PRODUCTS.map((product) => (
+                                {loading && (
+                                    <Caption className="text-[11px] text-[#6D6D6D]">
+                                        Loading...
+                                    </Caption>
+                                )}
+                                {!loading && error && (
+                                    <Caption className="text-[11px] text-[#6D6D6D]">
+                                        {error}
+                                    </Caption>
+                                )}
+                                {!loading && !error && results.length === 0 && (
+                                    <Caption className="text-[11px] text-[#6D6D6D]">
+                                        No products found.
+                                    </Caption>
+                                )}
+                                {results.map((product) => (
                                     <Link
-                                        key={product.id}
-                                        href={`/products/${product.id}`}
+                                        key={product.id || product._id}
+                                        href={`/products/${product.id || product._id}`}
                                         onClick={onClose}
                                         className="group"
                                     >
                                         <div className="flex gap-4">
                                             {/* Image */}
                                             <div className="relative aspect-[3/4] w-24 flex-shrink-0 overflow-hidden bg-neutral-100">
-                                                {product.discount && (
-                                                    <div className="absolute left-0 top-0 z-10 bg-[#E11B1B] px-2 py-1 text-[10px] font-bold text-white uppercase sm:text-[11px]">
-                                                        {product.discount}
-                                                    </div>
-                                                )}
-                                                <Image
-                                                    src={product.image}
-                                                    alt={product.title}
-                                                    fill
-                                                    className="object-cover"
+                                                <img
+                                                    src={product.image || product.images?.[0] || FALLBACK_IMAGE}
+                                                    alt={product.title || product.name || "Product"}
+                                                    className="h-full w-full object-cover"
+                                                    loading="lazy"
                                                 />
                                                 <button className="absolute right-1 top-1 text-white">
                                                     <Heart size={16} />
@@ -157,17 +202,12 @@ export default function SearchOverlay({ isOpen, onClose }) {
                                             {/* Info */}
                                             <div className="flex flex-col justify-center">
                                                 <BodyXS className="mb-1 uppercase tracking-[0.08em] text-[#20262B]">
-                                                    {product.title}
+                                                    {product.title || product.name || "Product"}
                                                 </BodyXS>
                                                 <div className="flex flex-wrap items-center gap-2">
                                                     <span className="text-[14px] text-[#20262B]">
-                                                        Rs. {product.price.toFixed(2)}
+                                                        Rs. {Number(product.price || 0).toFixed(2)}
                                                     </span>
-                                                    {product.originalPrice && (
-                                                        <span className="text-[14px] text-[#E11B1B]">
-                                                            Rs. {product.originalPrice.toFixed(2)}
-                                                        </span>
-                                                    )}
                                                 </div>
                                             </div>
                                         </div>

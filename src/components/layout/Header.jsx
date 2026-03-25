@@ -19,6 +19,18 @@ export default function Header() {
   const [user, setUser] = useState(null);
   const [cartCount, setCartCount] = useState(0);
 
+  const loadStoredUser = useCallback(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = window.localStorage.getItem("user");
+      const parsed = stored ? JSON.parse(stored) : null;
+      setUser(parsed);
+    } catch (err) {
+      console.warn("Failed to parse stored user", err);
+      setUser(null);
+    }
+  }, []);
+
   const refreshCartCount = useCallback(async () => {
     const token =
       typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
@@ -45,17 +57,21 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
+    loadStoredUser();
     refreshCartCount();
     const handleCartUpdate = () => refreshCartCount();
+    const handleStorage = () => loadStoredUser();
     if (typeof window !== "undefined") {
       window.addEventListener("cart:updated", handleCartUpdate);
+      window.addEventListener("storage", handleStorage);
     }
     return () => {
       if (typeof window !== "undefined") {
         window.removeEventListener("cart:updated", handleCartUpdate);
+        window.removeEventListener("storage", handleStorage);
       }
     };
-  }, [refreshCartCount]);
+  }, [refreshCartCount, loadStoredUser]);
   
 
 
@@ -75,9 +91,11 @@ aria-label="Toggle menu"
 </button>
 
 {/* Logo */}
-<Subheading2 className="text-xl font-semibold tracking-wide">
-INKSPIRE
-</Subheading2>
+<Link href="/" className="hover:opacity-80 transition-opacity">
+  <Subheading2 className="text-xl font-semibold tracking-wide">
+    INKSPIRE
+  </Subheading2>
+</Link>
 
 {/* Icons */}
 <div className="flex items-center gap-4">
@@ -108,9 +126,11 @@ className="relative hover:opacity-70 transition-opacity"
 {/* Desktop Layout */}
 <div className="hidden md:flex w-full items-center justify-between">
 {/* Left: Logo */}
-<Subheading2 className="text-xl font-semibold tracking-wide">
-INKSPIRE
-</Subheading2>
+<Link href="/" className="hover:opacity-80 transition-opacity">
+  <Subheading2 className="text-xl font-semibold tracking-wide">
+    INKSPIRE
+  </Subheading2>
+</Link>
 
 {/* Desktop Navigation */}
 <nav className="flex items-center gap-10 text-sm font-medium">
@@ -480,11 +500,11 @@ className="hover:opacity-70 transition-opacity outline-none"
 <button
   type="button"
   onClick={() => {
-    if (user) {
-      // If logged in, go to profile
+    const token =
+      typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
+    if (user || token) {
       window.location.href = "/user/profile";
     } else {
-      // If not logged in, show AuthModal
       setShowAuth(true);
     }
   }}

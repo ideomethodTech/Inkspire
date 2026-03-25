@@ -11,9 +11,11 @@ import {
   RelatedProducts,
 } from "@/components/product";
 import { getProductById, getProducts } from "@/services";
+import { useReviews } from "@/lib/hooks/useReviews";
 
 export default function ProductDetailPage() {
   const params = useParams();
+  const { reviews, loading: reviewsLoading, averageRating, totalReviews, addReview } = useReviews(params.id);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -114,7 +116,13 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Ratings & Reviews */}
-      <ProductRatings rating={4.5} />
+      <ProductRatings 
+        rating={averageRating} 
+        reviews={reviews} 
+        totalReviews={totalReviews}
+        onAddReview={addReview}
+        loading={reviewsLoading}
+      />
 
       {/* Related Products */}
       <RelatedProducts products={relatedProducts} />

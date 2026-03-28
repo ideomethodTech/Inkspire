@@ -1,17 +1,16 @@
 import dotenv from "dotenv";
 import admin from "firebase-admin";
-import fs from "fs";
-
 dotenv.config();
 
-const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT;
-if (!serviceAccountPath) {
-  throw new Error("FIREBASE_SERVICE_ACCOUNT not set in env");
-}
-
-const serviceAccount = JSON.parse(
-  fs.readFileSync(serviceAccountPath, "utf8")
-);
+const serviceAccount = {
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  privateKeyId: process.env.FIREBASE_PRIVATE_KEY_ID,
+  privateKey: process.env.FIREBASE_PRIVATE_KEY
+    ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
+    : undefined,
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  clientId: process.env.FIREBASE_CLIENT_ID,
+};
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),

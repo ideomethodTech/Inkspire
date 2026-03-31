@@ -7,6 +7,7 @@ import { useProfile } from "@/lib/hooks/useProfile";
 import { useAddress } from "@/lib/hooks/useAddress";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import PhoneInput from 'react-phone-number-input';
 
 export default function ProfilePage() {
   return <DesktopProfilePage />;
@@ -169,12 +170,16 @@ function DesktopProfilePage() {
               </div>
               <div>
                 <Label className="mb-2 block text-[11px] uppercase tracking-wider text-neutral-500">Mobile Number</Label>
-                <Input 
-                  value={profileForm.phoneNumber} 
-                  onChange={(e) => setProfileForm({...profileForm, phoneNumber: e.target.value})}
-                  className="bg-neutral-50"
-                  required
-                />
+                <PhoneInput
+  international
+  defaultCountry="IN"
+  value={profileForm.phoneNumber}
+  onChange={(value) =>
+    setProfileForm({ ...profileForm, phoneNumber: value })
+  }
+  className="bg-neutral-50 border rounded-md px-3 py-2"
+  required
+/>
               </div>
               <Button type="submit" className="mt-4 bg-black text-white px-8 uppercase tracking-widest text-[11px]">Save Changes</Button>
             </div>
@@ -238,11 +243,16 @@ function DesktopProfilePage() {
               </div>
               <div>
                 <Label className="mb-2 block text-[11px] uppercase tracking-wider text-neutral-500">Phone</Label>
-                <Input 
-                  value={addressForm.phone} 
-                  onChange={(e) => setAddressForm({...addressForm, phone: e.target.value})}
-                  required
-                />
+                <PhoneInput
+  international
+  defaultCountry="IN"
+  value={addressForm.phone}
+ onChange={(value) =>
+  setAddressForm({ ...addressForm, phone: value || "" })
+}
+  className="border rounded-md px-3 py-2"
+  required
+/>
               </div>
               <div className="md:col-span-2">
                 <Label className="mb-2 block text-[11px] uppercase tracking-wider text-neutral-500">Address Line</Label>

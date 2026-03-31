@@ -12,6 +12,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
+import PhoneInput from 'react-phone-number-input';
 
 export default function AuthModal({ initialMode = "signin", onClose, onLoginSuccess }) {
   const [mode, setMode] = useState(initialMode);
@@ -219,10 +220,12 @@ export default function AuthModal({ initialMode = "signin", onClose, onLoginSucc
             <label className="mt-4 mb-2 block text-sm font-medium">
               Phone Number *
             </label>
-            <Input 
-              placeholder="Phone Number" 
-              value={phoneNumber} 
-              onChange={(e) => setPhoneNumber(e.target.value)} 
+            <PhoneInput
+              international
+              defaultCountry="IN" // India
+              value={phoneNumber}
+              onChange={setPhoneNumber}
+              className="border rounded-md px-3 py-2"
             />
 
             {/* Newsletter checkbox */}

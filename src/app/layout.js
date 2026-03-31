@@ -4,6 +4,7 @@ import "./globals.css";
 import ConditionalHeader from "@/components/layout/ConditionalHeader";
 import ConditionalFooter from "@/components/layout/ConditionalFooter";
 import { AuthProvider, CartProvider } from "@/context";
+import 'react-phone-number-input/style.css';
 
 const poppins = Poppins({
   subsets: ["latin"],

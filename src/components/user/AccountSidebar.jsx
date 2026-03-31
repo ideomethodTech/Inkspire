@@ -65,7 +65,7 @@ export default function AccountSidebar() {
       {/* Greeting */}
       <div>
         <Caption className="text-[14px] text-[#6D6D6D] uppercase tracking-[0.16em]">
-          {greeting},
+          Good Morning,
         </Caption>
         <Subheading2 className="text-[32px] font-semibold text-[#20262B] italic leading-tight">
           {displayName}

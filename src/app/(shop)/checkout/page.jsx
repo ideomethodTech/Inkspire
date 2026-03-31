@@ -86,6 +86,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { addresses, loading: addressesLoading } = useAddress();
   const [items, setItems] = useState([]);
+  const [apiData, setApiData] = useState(null);
   const [cartError, setCartError] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -100,13 +101,30 @@ export default function CheckoutPage() {
     country: "India",
   });
 
-  const subtotal = useMemo(
-    () => items.reduce((sum, i) => sum + i.price * i.quantity, 0),
-    [items]
-  );
-  const gst = useMemo(() => subtotal * 0.18, [subtotal]);
-  const deliveryFee = subtotal >= 500 ? 0 : 50;
-  const total = subtotal + gst + deliveryFee;
+  const subtotal = useMemo(() => {
+    if (apiData && Number.isFinite(apiData.total)) return apiData.total;
+    return items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  }, [items, apiData]);
+
+  const discount = useMemo(() => {
+    if (apiData && Number.isFinite(apiData.discountAmount)) return apiData.discountAmount;
+    return 0;
+  }, [apiData]);
+
+  const gst = useMemo(() => {
+    // If we have a discounted total from API, does it include GST? 
+    // Usually GST is calculated on the discounted subtotal.
+    const taxableAmount = subtotal - discount;
+    return taxableAmount * 0.18;
+  }, [subtotal, discount]);
+
+  const deliveryFee = 0;
+
+  const total = useMemo(() => {
+    // If the API provides a final discounted total, we might use it, 
+    // but here we also add GST which might not be in the cart API yet.
+    return (subtotal - discount) + gst + deliveryFee;
+  }, [subtotal, discount, gst, deliveryFee]);
 
   useEffect(() => {
     let active = true;
@@ -186,15 +204,19 @@ export default function CheckoutPage() {
 
       try {
         const res = await getCart();
-        const apiItems = res?.data?.items || res?.items || [];
+        const data = res?.data || res || null;
+        const apiItems = data?.items || [];
+        
         if (res?.success && apiItems.length > 0) {
           const hydrated = await enrichCartItems(apiItems);
           if (active) {
             setItems(hydrated);
+            setApiData(data);
             setCartError("");
           }
         } else if (active) {
           setItems([]);
+          setApiData(null);
           setCartError("Your cart is empty.");
         }
       } catch (err) {
@@ -414,6 +436,20 @@ export default function CheckoutPage() {
                   <span>Subtotal</span>
                   <span>Rs.{subtotal.toFixed(2)}</span>
                 </div>
+                {discount > 0 && (
+                  <>
+                    <div className="flex items-center justify-between text-green-600 font-medium">
+                      <span>Coupon Discount</span>
+                      <span>- Rs.{discount.toFixed(2)}</span>
+                    </div>
+                    {apiData?.appliedCoupon && (
+                      <div className="flex items-center justify-between text-[11px] text-green-700">
+                        <span>Coupon ({apiData.appliedCoupon})</span>
+                        <span>Applied!</span>
+                      </div>
+                    )}
+                  </>
+                )}
                 <div className="flex items-center justify-between">
                   <span>GST (18%)</span>
                   <span>Rs.{gst.toFixed(2)}</span>

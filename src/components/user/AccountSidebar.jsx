@@ -1,17 +1,13 @@
 "use client";
 
 import Link from "next/link";
-<<<<<<< HEAD
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-=======
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
->>>>>>> dev-fe
 import { User, ShoppingBag, Tag, Wallet, CreditCard, LogOut } from "lucide-react";
 import clsx from "clsx";
 import { Caption, Subheading2 } from "@/components/typography";
 import { getProfile } from "@/api/profile";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 const NAV_ITEMS = [
   { label: "My Profile", href: "/user/profile", icon: User },
@@ -23,30 +19,8 @@ const NAV_ITEMS = [
 
 export default function AccountSidebar() {
   const pathname = usePathname();
-<<<<<<< HEAD
-  const router = useRouter();
-  const [user, setUser] = useState(null);
-  const [greeting, setGreeting] = useState("Hello");
-
-  // Load user from localStorage
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser));
-
-    // Set dynamic greeting
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting("Good Morning");
-    else if (hour < 18) setGreeting("Good Afternoon");
-    else setGreeting("Good Evening");
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    router.push("/"); // go back to homepage
-  };
-=======
   const [displayName, setDisplayName] = useState("User");
+  const { logout, loading: logoutLoading } = useAuth();
 
   useEffect(() => {
     const loadUser = async () => {
@@ -85,7 +59,6 @@ export default function AccountSidebar() {
 
     loadUser();
   }, []);
->>>>>>> dev-fe
 
   return (
     <aside className="w-full max-w-[240px] space-y-6">
@@ -95,11 +68,7 @@ export default function AccountSidebar() {
           {greeting},
         </Caption>
         <Subheading2 className="text-[32px] font-semibold text-[#20262B] italic leading-tight">
-<<<<<<< HEAD
-          {user?.displayName || "Guest"}
-=======
           {displayName}
->>>>>>> dev-fe
         </Subheading2>
       </div>
 
@@ -129,18 +98,15 @@ export default function AccountSidebar() {
         })}
       </nav>
 
-      {/* Logout */}
-      <button
-        onClick={handleLogout}
-        className="flex w-full items-center gap-3 rounded-md px-4 py-3 text-[14px] font-medium uppercase tracking-[0.08em] text-[#6D6D6D] transition-colors hover:bg-neutral-100"
+      {/* Logout Button */}
+      <button 
+        onClick={logout}
+        disabled={logoutLoading}
+        className="flex w-full items-center gap-3 rounded-md px-4 py-3 text-[14px] font-medium uppercase tracking-[0.08em] text-[#6D6D6D] transition-colors hover:bg-neutral-100 disabled:opacity-50"
       >
         <LogOut size={18} className="text-[#6D6D6D]" />
-        <span>Logout</span>
+        <span>{logoutLoading ? "Logging out..." : "Logout"}</span>
       </button>
     </aside>
   );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> dev-fe

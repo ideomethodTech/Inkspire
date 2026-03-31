@@ -215,7 +215,7 @@ export default function ProductInfo({ product, onAddToCart }) {
                 )}
                 {key === "delivery" && (
                   <div className="flex flex-col gap-2">
-                    <Body2>Free shipping on orders above Rs. 500</Body2>
+                    <Body2>Free shipping on all orders</Body2>
                     <Body2>Delivery within 5-7 business days</Body2>
                     <Body2>Easy returns within 7 days of delivery</Body2>
                   </div>

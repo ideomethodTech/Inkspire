@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import ConditionalHeader from "@/components/layout/ConditionalHeader";
 import ConditionalFooter from "@/components/layout/ConditionalFooter";
+import { AuthProvider, CartProvider } from "@/context";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -29,9 +30,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={poppins.variable}>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ConditionalHeader />
-        {children}
-        <ConditionalFooter />
+        <AuthProvider>
+          <CartProvider>
+            <ConditionalHeader />
+            {children}
+            <ConditionalFooter />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -3,64 +3,53 @@
 import { useState } from "react";
 import { Body1, Body2, Caption, Subheading2 } from "@/components/typography";
 import Button from "@/components/ui/Buttons";
-
-const AVAILABLE_COUPONS = [
-  {
-    id: 1,
-    code: "INK20",
-    title: "20% OFF YOUR FIRST ORDER",
-    desc: "Join our wall art club and get 20% off your first order.",
-    expiry: "Expires: 30 Jun 2025",
-  },
-  {
-    id: 2,
-    code: "SHIPFREE",
-    title: "FREE SHIPPING",
-    desc: "Free shipping on orders above Rs. 500.",
-    expiry: "Expires: 15 Jul 2025",
-  },
-];
-
-const USED_COUPONS = [
-  {
-    id: 3,
-    code: "SAVE10",
-    title: "10% OFF",
-    desc: "Get 10% off on all posters",
-    expiry: "Used on 15 Jan 2025",
-  },
-];
-
-const EXPIRED_COUPONS = [
-  {
-    id: 4,
-    code: "WELCOME25",
-    title: "25% WELCOME OFFER",
-    desc: "Welcome offer for new users",
-    expiry: "Expired on 31 Dec 2024",
-  },
-];
-
-const TABS = [
-  { id: "available", label: "Available", count: 2 },
-  { id: "used", label: "Used", count: 1 },
-  { id: "expired", label: "Expired", count: 1 },
-];
+import { useCoupons } from "@/lib/hooks/useCoupons";
+import { useRouter } from "next/navigation";
 
 export default function CouponsPage() {
   const [activeTab, setActiveTab] = useState("available");
+  const { coupons, loading, error } = useCoupons();
+  const router = useRouter();
 
-  const getCoupons = () => {
-    switch (activeTab) {
-      case "available":
-        return AVAILABLE_COUPONS;
-      case "used":
-        return USED_COUPONS;
-      case "expired":
-        return EXPIRED_COUPONS;
-      default:
-        return AVAILABLE_COUPONS;
-    }
+  const normalizedCoupons = coupons.map((coupon) => {
+    const expiryDate = coupon.expiryDate || coupon.expiry || coupon.expiresAt;
+    const isExpired = expiryDate ? new Date(expiryDate) < new Date() : false;
+    const isActive = typeof coupon.isActive === "boolean" ? coupon.isActive : true;
+    const status = !isActive || isExpired ? "expired" : "available";
+
+    return {
+      id: coupon._id || coupon.id,
+      code: coupon.code,
+      description: coupon.description || coupon.desc || "",
+      discountType: coupon.discountType,
+      value: coupon.value,
+      minOrderValue: coupon.minOrderValue,
+      expiryDate,
+      status,
+    };
+  });
+
+  const getCouponsByStatus = (status) => {
+    return normalizedCoupons.filter((coupon) => coupon.status === status);
+  };
+
+  const availableCoupons = getCouponsByStatus("available");
+  const usedCoupons = getCouponsByStatus("used");
+  const expiredCoupons = getCouponsByStatus("expired");
+
+  const TABS = [
+    { id: "available", label: "Available", count: availableCoupons.length },
+    { id: "used", label: "Used", count: usedCoupons.length },
+    { id: "expired", label: "Expired", count: expiredCoupons.length },
+  ];
+
+  const currentCoupons = activeTab === "available" ? availableCoupons 
+    : activeTab === "used" ? usedCoupons 
+    : expiredCoupons;
+
+  const handleApply = (coupon) => {
+    // In a real app, applying from here might redirect to cart or just show a message
+    router.push("/cart");
   };
 
   return (
@@ -96,21 +85,35 @@ export default function CouponsPage() {
 
       {/* Coupons Grid */}
       <section className="space-y-4">
-        {getCoupons().map((coupon) => (
-          <CouponCard key={coupon.id} coupon={coupon} status={activeTab} />
-        ))}
+        {loading ? (
+          <div className="py-10 text-center">Loading coupons...</div>
+        ) : error ? (
+          <div className="py-10 text-center text-red-500">{error}</div>
+        ) : currentCoupons.length === 0 ? (
+          <div className="py-10 text-center text-gray-500">No coupons found.</div>
+        ) : (
+          currentCoupons.map((coupon) => (
+            <CouponCard 
+              key={coupon.id} 
+              coupon={coupon} 
+              status={activeTab} 
+              onApply={() => handleApply(coupon)}
+            />
+          ))
+        )}
       </section>
     </div>
   );
 }
 
-function CouponCard({ coupon, status }) {
+function CouponCard({ coupon, status, onApply }) {
   const getButtonProps = () => {
     switch (status) {
       case "available":
         return {
           text: "Apply",
           className: "bg-black text-white hover:bg-gray-800",
+          onClick: onApply
         };
       case "used":
         return {
@@ -128,6 +131,7 @@ function CouponCard({ coupon, status }) {
         return {
           text: "Apply",
           className: "bg-black text-white hover:bg-gray-800",
+          onClick: onApply
         };
     }
   };
@@ -138,19 +142,33 @@ function CouponCard({ coupon, status }) {
     <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-dashed border-gray-200 pb-4">
         <Body1 className="text-[16px] font-semibold uppercase tracking-[0.12em] text-[#20262B]">
-          {coupon.title}
+          {coupon.discountType === "percentage"
+            ? `${coupon.value}% OFF`
+            : `Rs.${coupon.value} OFF`}
         </Body1>
         <span className="rounded-full bg-black px-3 py-1 text-[12px] font-semibold text-white">
           {coupon.code}
         </span>
       </div>
-      <Body2 className="mt-4 text-[14px] text-[#6D6D6D]">{coupon.desc}</Body2>
+      <Body2 className="mt-4 text-[14px] text-[#6D6D6D]">
+        {coupon.description || "Use this coupon for extra savings."}
+      </Body2>
       <div className="mt-6 flex items-center justify-between">
-        <span className="text-[12px] text-[#6D6D6D]">{coupon.expiry}</span>
+        <span className="text-[12px] text-[#6D6D6D]">
+          {coupon.minOrderValue
+            ? `Min order: Rs.${coupon.minOrderValue} · `
+            : ""}
+          {coupon.expiryDate
+            ? status === "available"
+              ? `Expires: ${new Date(coupon.expiryDate).toLocaleDateString()}`
+              : `Expired on ${new Date(coupon.expiryDate).toLocaleDateString()}`
+            : "No expiry date"}
+        </span>
         <Button
           size="sm"
           className={buttonProps.className}
           disabled={buttonProps.disabled}
+          onClick={buttonProps.onClick}
         >
           {buttonProps.text}
         </Button>
@@ -158,4 +176,3 @@ function CouponCard({ coupon, status }) {
     </div>
   );
 }
-

@@ -23,14 +23,17 @@ export default function OrdersPage() {
         DELIVERED: 3,
         CANCELLED: 0,
       };
-      const statusValue = (o.status || "").toString().toUpperCase();
+      
+      // Handle potential nested status object from backend
+      const rawStatus = typeof o.status === "object" ? o.status.current : o.status;
+      const statusValue = (rawStatus || "PENDING").toString().toUpperCase();
       const currentStep = statusIndexMap[statusValue] ?? 0;
 
       return {
         id: o._id || o.id,
         orderNumber: o.orderNumber || o.orderNo || o.number,
         eta: o.estimatedDelivery || "TBD",
-        status: statusValue || o.status || "PENDING",
+        status: statusValue,
         statusColor:
           statusValue === "PENDING"
             ? "bg-yellow-500 text-white"

@@ -5,16 +5,15 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { loginUser as realLoginUser, registerUser } from "@/api/auth";
+import { loginUser as realLoginUser, registerUser } from "@/services/authService";
 import { auth } from "@/lib/firebase";
 import {
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
 
-export default function AuthModal({ initialMode = "email", onClose }) {
+export default function AuthModal({ initialMode = "signin", onClose, onLoginSuccess }) {
   const [mode, setMode] = useState(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,27 +23,9 @@ export default function AuthModal({ initialMode = "email", onClose }) {
   const [loading, setLoading] = useState(false);
   const googleProvider = new GoogleAuthProvider();
 
-  // --- Handle "Continue" from email step ---
-  const handleEmailContinue = async () => {
-    if (!email) return alert("Please enter an email");
-    setLoading(true);
-
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"}/auth/check-email?email=${email}`
-      );
-      const data = await response.json();
-      setMode(data.isExistingUser ? "signin" : "signup");
-    } catch (err) {
-      console.error("Error checking email:", err);
-      alert("Something went wrong. Try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // --- Handle login ---
   const handleLogin = async () => {
+    if (!email) return alert("Please enter your email");
     if (!password) return alert("Please enter your password");
     setLoading(true);
 
@@ -61,6 +42,7 @@ export default function AuthModal({ initialMode = "email", onClose }) {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
+      if (onLoginSuccess) onLoginSuccess(data.user);
       window.location.href = "/user/profile";
     } catch (error) {
       console.error("Login failed:", error);
@@ -72,34 +54,29 @@ export default function AuthModal({ initialMode = "email", onClose }) {
 
   // --- Handle signup ---
   const handleSignup = async () => {
+    if (!email) return alert("Please enter an email");
     if (!password) return alert("Please enter a password");
     if (!name) return alert("Please enter your name");
     setLoading(true);
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-      const idToken = await userCredential.user.getIdToken();
+      // Backend handles Firebase creation as well per api-doc.md
       const data = await registerUser({
-        idToken,
         email,
-        password, // Some backends might want this if not purely firebase
-        name,
+        password,
+        displayName: name,
         dob,
-        phone_number: phoneNumber
+        phoneNumber: phoneNumber
       });
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
+      if (onLoginSuccess) onLoginSuccess(data.user);
       window.location.href = "/user/profile";
     } catch (error) {
       console.error("Signup failed:", error);
-      alert(error.message || "Signup failed");
+      alert(error.response?.data?.message || error.message || "Signup failed");
     } finally {
       setLoading(false);
     }
@@ -116,6 +93,7 @@ export default function AuthModal({ initialMode = "email", onClose }) {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
+      if (onLoginSuccess) onLoginSuccess(data.user);
       window.location.href = "/user/profile";
     } catch (error) {
       console.error("Google login failed:", error);
@@ -132,25 +110,36 @@ export default function AuthModal({ initialMode = "email", onClose }) {
           <X className="h-5 w-5" />
         </button>
 
-        {/* EMAIL STEP */}
-        {mode === "email" && (
+        {/* SIGN IN */}
+        {mode === "signin" && (
           <>
-            <h2 className="mb-2 text-sm font-semibold uppercase">
-              Sign in / Create an account
-            </h2>
+            <h2 className="mb-2 text-sm font-semibold uppercase">Sign in</h2>
             <p className="mb-6 text-sm text-muted-foreground">
-              Enter your email to sign in or create a new account.
+              Sign in to your account to continue
             </p>
-
+            
             <label className="mb-2 block text-sm font-medium">Email *</label>
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" />
-
+            <Input 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              placeholder="Email" 
+              type="email"
+            />
+            
+            <label className="mt-4 mb-2 block text-sm font-medium">Password *</label>
+            <Input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            
             <Button
               className="mt-6 w-full"
-              onClick={handleEmailContinue}
+              onClick={handleLogin}
               disabled={loading}
             >
-              {loading ? "Checking..." : "Continue"}
+              {loading ? "Signing in..." : "Sign in"}
             </Button>
 
             <div className="my-6 flex items-center gap-2 text-xs text-muted-foreground">
@@ -167,27 +156,13 @@ export default function AuthModal({ initialMode = "email", onClose }) {
             >
               Continue with Google
             </Button>
-          </>
-        )}
 
-        {/* SIGN IN */}
-        {mode === "signin" && (
-          <>
-            <h2 className="mb-2 text-sm font-semibold uppercase">Sign in</h2>
-            <Input value={email} disabled />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-2"
-            />
             <Button
-              className="mt-6 w-full"
-              onClick={handleLogin}
-              disabled={loading}
+              variant="ghost"
+              className="mt-4 w-full text-sm"
+              onClick={() => setMode("signup")}
             >
-              {loading ? "Signing in..." : "Continue"}
+              Don't have an account? Sign up
             </Button>
           </>
         )}
@@ -209,7 +184,12 @@ export default function AuthModal({ initialMode = "email", onClose }) {
 
             {/* Email */}
             <label className="mt-4 mb-2 block text-sm font-medium">Email *</label>
-            <Input value={email} disabled />
+            <Input 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              placeholder="Email" 
+              type="email" 
+            />
 
             {/* Password */}
             <label className="mt-4 mb-2 block text-sm font-medium">

@@ -102,7 +102,7 @@ export const HERO_FRAMES_BASE_2 = [
     height: 207,
     width: 350,
     className:
-      "absolute top-[-180px]  left-[-60px] scale-75 sm:scale-90 lg:scale-70 hidden md:block",
+      "absolute top-[-230px]  left-[-60px] scale-75 sm:scale-90 lg:scale-70 hidden md:block",
   },
   {
     key: "frame-j",
@@ -111,7 +111,7 @@ export const HERO_FRAMES_BASE_2 = [
     width: 250,
     height: 220,
     className:
-      "absolute top-[-150px] left-[500px] scale-80 sm:scale-95 lg:scale-90 hidden md:block",
+      "absolute top-[-180px] left-[350px] scale-80 sm:scale-95 lg:scale-90 hidden md:block",
   },
   {
     key: "frame-k",
@@ -120,16 +120,16 @@ export const HERO_FRAMES_BASE_2 = [
     width: 185,
     height: 180,
     className:
-      "absolute top-[-120px]  left-[950px] scale-70 sm:scale-85 lg:scale-80 hidden md:block",
+      "absolute top-[-140px]  left-[788px] scale-70 sm:scale-85 lg:scale-80 hidden md:block",
   },
   {
     key: "frame-l",
     src: "/assets/asset/frame-l.jpg",
     alt: "hero frame l",
-    width: 398,
+    width: 450,
     height: 335,
     className:
-      "absolute top-[-95px] left-[1110px] scale-60 sm:scale-65 lg:scale-60 origin-top-left hidden md:block",
+      "absolute top-[-128px] left-[950px] scale-60 sm:scale-65 lg:scale-60 origin-top-left hidden md:block",
   },
   {
     key: "frame-m",
@@ -138,7 +138,7 @@ export const HERO_FRAMES_BASE_2 = [
     width: 185,
     height: 209,
     className:
-      "absolute top-[173px] left-[1201px] scale-70 sm:scale-85 lg:scale-60 hidden md:block",
+      "absolute top-[182px] left-[1070px] scale-70 sm:scale-85 lg:scale-60 hidden md:block",
   },
   {
     key: "frame-n",
@@ -147,7 +147,7 @@ export const HERO_FRAMES_BASE_2 = [
     width: 546,
     height: 295,
     className:
-      "absolute top-[350px] left-[930px] scale-70 sm:scale-85 lg:scale-70 hidden md:block",
+      "absolute top-[430px] left-[790px] scale-70 sm:scale-85 lg:scale-70 hidden md:block",
   },
   {
     key: "frame-o",
@@ -156,7 +156,7 @@ export const HERO_FRAMES_BASE_2 = [
     width: 200,
     height: 204,
     className:
-      "absolute top-[390px] left-[370px] scale-70 sm:scale-85 lg:scale-70 hidden md:block",
+      "absolute top-[448px] left-[370px] scale-70 sm:scale-85 lg:scale-70 hidden md:block",
   },
   {
     key: "frame-p",
@@ -165,7 +165,7 @@ export const HERO_FRAMES_BASE_2 = [
     width: 162,
     height: 220,
     className:
-      "absolute top-[410px] left-[260px] rotate-[25deg]  scale-40 sm:scale-40 lg:scale-45 hidden md:block",
+      "absolute top-[430px] left-[260px] rotate-[25deg]  scale-40 sm:scale-40 lg:scale-45 hidden md:block",
   },
   
   {

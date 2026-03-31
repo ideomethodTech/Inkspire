@@ -335,12 +335,20 @@ export default function CartPage() {
               )}
 
               <Button
-                className="mt-6 h-12 w-full bg-black text-white"
-                onClick={() => router.push("/checkout")}
-              >
-                Continue to checkout
-              </Button>
-
+  className={`mt-6 h-12 w-full ${
+    items.length === 0
+      ? "bg-neutral-300 cursor-not-allowed"
+      : "bg-black text-white"
+  }`}
+  onClick={() => {
+    if (items.length > 0) {
+      router.push("/checkout");
+    }
+  }}
+  disabled={items.length === 0}
+>
+  Continue to checkout
+</Button>
               {items.length > 0 && (
                 <button
                   type="button"

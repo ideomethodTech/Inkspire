@@ -2,19 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Edit, Trash2, MapPin, Wallet, CreditCard, Info, ShieldCheck, CheckCircle2, ChevronRight, PlusCircle } from "lucide-react";
+import { Edit, Trash2, MapPin, Wallet, CreditCard, Info, ShieldCheck, CheckCircle2, ChevronRight, PlusCircle, LogOut } from "lucide-react";
 import { Body1, Body2, Caption, Subheading2 } from "@/components/typography";
 import { getProfile } from "@/api/profile";
-
-const ADDRESSES = [
-  {
-    id: 1,
-    label: "Home",
-    line1: "123 Dreamy Lane, Apt 4B",
-    line2: "Fantasyland, FL 12345",
-    phone: "+1 123-456-7890",
-  },
-];
+import { useCoupons } from "@/lib/hooks/useCoupons";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 export default function MobileProfilePage() {
   const pathname = usePathname();
@@ -30,6 +22,7 @@ export default function MobileProfilePage() {
 
   const [activeTab, setActiveTabState] = useState(getInitialTab());
   const [couponTab, setCouponTab] = useState("available");
+  const { coupons, loading: couponsLoading, error: couponsError } = useCoupons();
   const [isEditing, setIsEditing] = useState(false);
   const [scrollPage, setScrollPage] = useState(0);
   const [profile, setProfile] = useState(null);
@@ -92,6 +85,9 @@ export default function MobileProfilePage() {
     else router.push(`/user/${tab}`);
   };
 
+  const { logout, loading: logoutLoading } = useAuth();
+  const currentCoupons = coupons.filter(c => c.status === couponTab);
+
   return (
     <div className="min-h-screen bg-[#F7F7F7] pt-4">
       {/* Breadcrumb */}
@@ -108,7 +104,6 @@ export default function MobileProfilePage() {
           onScroll={(e) => {
             const scrollLeft = e.currentTarget.scrollLeft;
             const width = e.currentTarget.clientWidth;
-            // if we've scrolled more than half the container width, we're on the second page
             if (scrollLeft > width / 2) {
               setScrollPage(1);
             } else {
@@ -118,7 +113,6 @@ export default function MobileProfilePage() {
         >
           {/* Page 1: 3 items */}
           <div className="flex w-full min-w-full flex-shrink-0 snap-center items-start justify-evenly px-4">
-            {/* My Profile (active) */}
             <button
               type="button"
               onClick={() => setActiveTab("profile")}
@@ -143,7 +137,6 @@ export default function MobileProfilePage() {
               </span>
             </button>
 
-            {/* My Orders */}
             <button
               type="button"
               onClick={() => setActiveTab("orders")}
@@ -165,7 +158,6 @@ export default function MobileProfilePage() {
               </span>
             </button>
 
-            {/* My Coupons */}
             <button
               type="button"
               onClick={() => setActiveTab("coupons")}
@@ -190,7 +182,6 @@ export default function MobileProfilePage() {
 
           {/* Page 2: 2 items */}
           <div className="flex w-full min-w-full flex-shrink-0 snap-center items-start justify-evenly px-4">
-            {/* My Wallets */}
             <button
               type="button"
               onClick={() => setActiveTab("wallets")}
@@ -212,7 +203,6 @@ export default function MobileProfilePage() {
               </span>
             </button>
 
-            {/* My Saved Payments */}
             <button
               type="button"
               onClick={() => setActiveTab("payments")}
@@ -234,12 +224,10 @@ export default function MobileProfilePage() {
               </span>
             </button>
 
-            {/* Invisible placeholder item to maintain exact 1/3 item width distribution */}
             <div className="flex flex-1" aria-hidden="true" />
           </div>
         </div>
 
-        {/* Pagination dots */}
         <div className="mt-2 mb-4 flex justify-center gap-2">
           <span className={`h-1.5 w-4 rounded-full transition-colors ${scrollPage === 0 ? "bg-black" : "bg-neutral-300"}`} />
           <span className={`h-1.5 w-4 rounded-full transition-colors ${scrollPage === 1 ? "bg-black" : "bg-neutral-300"}`} />
@@ -248,13 +236,11 @@ export default function MobileProfilePage() {
 
       {/* Main Content */}
       <main className="px-4 pb-8 space-y-6">
-        {/* PROFILE TAB */}
         {activeTab === "profile" && (
           <>
             {profileError && (
               <p className="text-sm text-gray-500">{profileError}</p>
             )}
-            {/* Profile Section */}
             <section className="rounded-2xl bg-white p-5 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                 <Subheading2 className="text-[18px] font-semibold text-[#111827] normal-case">
@@ -271,7 +257,6 @@ export default function MobileProfilePage() {
                 </button>
               </div>
 
-              {/* User Details */}
               <div className="space-y-4">
                 <div>
                   <Caption className="mb-1 text-[11px] uppercase tracking-[0.16em] text-[#9CA3AF]">
@@ -321,7 +306,6 @@ export default function MobileProfilePage() {
               </div>
             </section>
 
-            {/* Addresses Section */}
             <section className="rounded-2xl bg-white p-5 shadow-sm">
               <div className="mb-4">
                 <Subheading2 className="text-[16px] font-semibold text-[#111827] normal-case">
@@ -330,9 +314,7 @@ export default function MobileProfilePage() {
               </div>
 
               <div className="space-y-3">
-                {/* Saved Address */}
                 <div className="relative rounded-2xl border border-gray-200 bg-white p-4">
-                  {/* Edit/Delete Icons */}
                   <div className="absolute right-3 top-3 flex gap-2">
                     <button
                       className="rounded-full p-1.5 text-gray-500 transition-colors hover:bg-gray-100"
@@ -348,14 +330,12 @@ export default function MobileProfilePage() {
                     </button>
                   </div>
 
-                  {/* Home Badge */}
                   <div className="mb-3 inline-flex items-center rounded-full bg-gray-100 px-3 py-1">
                     <Caption className="text-[10px] font-medium uppercase tracking-[0.16em] text-gray-600">
                       Home
                     </Caption>
                   </div>
 
-                  {/* Address Details */}
                   <div className="space-y-1">
                     <Body2 className="text-[13px] text-[#111827]">
                       123 Dreamy Lane, Apt 4B
@@ -369,7 +349,6 @@ export default function MobileProfilePage() {
                   </div>
                 </div>
 
-                {/* Add New Address */}
                 <button className="mt-1 flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-gray-300 bg-transparent py-8 transition-colors hover:border-gray-400 hover:bg-gray-50">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 text-[#6B7280]">
                     <MapPin size={18} />
@@ -380,13 +359,23 @@ export default function MobileProfilePage() {
                 </button>
               </div>
             </section>
+
+            {/* Logout Section */}
+            <section className="pt-2 pb-6">
+              <button 
+                onClick={logout}
+                disabled={logoutLoading}
+                className="flex w-full items-center justify-center gap-3 rounded-2xl border border-neutral-200 bg-white py-4 text-[14px] font-bold uppercase tracking-[0.08em] text-[#E11B1B] shadow-sm transition-colors hover:bg-red-50 disabled:opacity-50"
+              >
+                <LogOut size={18} />
+                <span>{logoutLoading ? "Logging out..." : "Sign Out"}</span>
+              </button>
+            </section>
           </>
         )}
 
-        {/* ORDERS TAB */}
         {activeTab === "orders" && (
           <section className="rounded-2xl bg-white p-5 shadow-sm">
-            {/* Header */}
             <div className="mb-4 flex items-start justify-between text-[11px] text-[#6D6D6D]">
               <div>
                 <p className="mb-1">Order ID</p>
@@ -407,7 +396,6 @@ export default function MobileProfilePage() {
               </div>
             </div>
 
-            {/* Progress bar */}
             <div className="mb-6">
               <div className="flex items-center justify-between text-[10px] text-[#6D6D6D]">
                 {["Placed", "Shipped", "Out for Delivery", "Delivery"].map(
@@ -429,7 +417,6 @@ export default function MobileProfilePage() {
               </div>
             </div>
 
-            {/* Items */}
             <div className="mb-4 space-y-4 border-t border-b border-[#F3F4F6] py-4">
               {[1, 2].map((i) => (
                 <div key={i} className="flex items-center gap-3">
@@ -447,7 +434,6 @@ export default function MobileProfilePage() {
               ))}
             </div>
 
-            {/* Total + button */}
             <div className="mb-4 flex items-center justify-between text-[12px] text-[#111827]">
               <div className="flex items-center gap-2">
                 <span>🛍</span>
@@ -464,17 +450,14 @@ export default function MobileProfilePage() {
           </section>
         )}
 
-        {/* COUPONS TAB (placeholder) */}
         {activeTab === "coupons" && (
           <section className="space-y-4">
-            {/* Heading */}
             <div className="px-1">
               <Subheading2 className="text-[18px] font-semibold text-[#111827] normal-case">
                 My Coupons
               </Subheading2>
             </div>
 
-            {/* Coupon tabs */}
             <div className="rounded-2xl bg-white p-4 shadow-sm">
               <div className="mb-3 flex border-b border-[#F3F4F6] text-[13px] font-semibold">
                 {[
@@ -500,123 +483,55 @@ export default function MobileProfilePage() {
                 })}
               </div>
 
-              {/* Coupon list - mimic Available view from design */}
-              {couponTab === "available" && (
+              {couponsLoading ? (
+                <div className="py-6 text-center text-[12px] text-[#9CA3AF]">Loading...</div>
+              ) : currentCoupons.length === 0 ? (
+                <div className="py-6 text-center text-[12px] text-[#9CA3AF]">
+                  You have no {couponTab} coupons.
+                </div>
+              ) : (
                 <div className="space-y-3">
-                  {/* Auto-applied coupon */}
-                  <div className="rounded-xl bg-white px-4 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.04)]">
-                    <div className="mb-2 flex items-start justify-between">
-                      <div>
-                        <p className="text-[13px] font-semibold text-[#111827]">
-                          $300 OFF
-                        </p>
-                        <p className="mt-1 text-[11px] text-[#6B7280]">
-                          Flat discount on all Framed Posters
-                        </p>
-                        <p className="mt-1 text-[10px] text-[#9CA3AF]">
-                          On orders above $99
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <span className="inline-flex items-center rounded-full bg-[#E8F5E9] px-3 py-1 text-[10px] font-semibold text-[#2E7D32]">
-                          Auto-applied
-                        </span>
-                        <button className="text-[11px] font-semibold text-[#E11B1B]">
-                          View details &gt;
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Code coupon */}
-                  <div className="rounded-xl bg-white px-4 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.04)]">
-                    <div className="mb-2 flex items-start justify-between">
-                      <div>
-                        <p className="text-[13px] font-semibold text-[#111827]">
-                          FREE SHIPPING
-                        </p>
-                        <div className="mt-1 inline-flex items-center gap-2 text-[10px]">
-                          <span className="text-[#6B7280]">Code:</span>
-                          <span className="rounded-md bg-[#EEF2FF] px-2 py-[2px] font-semibold text-[#4F46E5]">
-                            SHIPFREE
-                          </span>
+                  {currentCoupons.map((coupon) => (
+                    <div key={coupon.id} className="rounded-xl bg-white px-4 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.04)]">
+                      <div className="mb-2 flex items-start justify-between">
+                        <div>
+                          <p className="text-[13px] font-semibold text-[#111827]">
+                            {coupon.title}
+                          </p>
+                          {coupon.code && (
+                            <div className="mt-1 inline-flex items-center gap-2 text-[10px]">
+                              <span className="text-[#6B7280]">Code:</span>
+                              <span className="rounded-md bg-[#EEF2FF] px-2 py-[2px] font-semibold text-[#4F46E5]">
+                                {coupon.code}
+                              </span>
+                            </div>
+                          )}
+                          <p className="mt-1 text-[11px] text-[#6B7280]">
+                            {coupon.desc}
+                          </p>
+                          <p className="mt-1 text-[10px] text-[#9CA3AF]">
+                            {couponTab === "available" ? `Expires: ${new Date(coupon.expiry).toLocaleDateString()}` : 
+                             couponTab === "used" ? `Used on ${new Date(coupon.expiry).toLocaleDateString()}` : 
+                             `Expired on ${new Date(coupon.expiry).toLocaleDateString()}`}
+                          </p>
                         </div>
-                        <p className="mt-1 text-[11px] text-[#6B7280]">
-                          Flat discount on all Framed Posters
-                        </p>
-                        <p className="mt-1 text-[10px] text-[#9CA3AF]">
-                          On orders above $99
-                        </p>
-                      </div>
-                      <button className="mt-1 text-[11px] font-semibold text-[#111827]">
-                        Copy Code
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Expiring soon coupon */}
-                  <div className="rounded-xl bg-white px-4 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.04)]">
-                    <div className="mb-2 flex items-start justify-between">
-                      <div>
-                        <p className="text-[13px] font-semibold text-[#111827]">
-                          FREE SHIPPING
-                        </p>
-                        <p className="mt-1 text-[11px] text-[#6B7280]">
-                          Flat discount on all Framed Posters
-                        </p>
-                        <p className="mt-1 text-[10px] text-[#9CA3AF]">
-                          On orders above $99
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <span className="inline-flex items-center rounded-full bg-[#FEF3C7] px-3 py-1 text-[10px] font-semibold text-[#B45309]">
-                          Expires in 2 days
-                        </span>
-                        <button className="text-[11px] font-semibold text-[#E11B1B]">
-                          Shop Now &gt;
-                        </button>
+                        {couponTab === "available" && (
+                          <button 
+                            onClick={() => router.push("/cart")}
+                            className="mt-1 text-[11px] font-semibold text-[#E11B1B]"
+                          >
+                            Apply &gt;
+                          </button>
+                        )}
                       </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
               )}
-
-              {/* Simple placeholders for Used / Expired */}
-              {couponTab === "used" && (
-                <div className="py-6 text-center text-[12px] text-[#9CA3AF]">
-                  You have no used coupons yet.
-                </div>
-              )}
-              {couponTab === "expired" && (
-                <div className="py-6 text-center text-[12px] text-[#9CA3AF]">
-                  You have no expired coupons.
-                </div>
-              )}
-            </div>
-
-            {/* Recently used section */}
-            <div className="mt-4 space-y-2 px-1">
-              <Caption className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9CA3AF]">
-                Recently Used
-              </Caption>
-              <div className="rounded-2xl border border-[#E5E7EB] bg-white px-4 py-3 text-[11px] text-[#9CA3AF]">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-[#9CA3AF]">$300 OFF</p>
-                    <p className="mt-1">Flat discount on all Framed Posters</p>
-                  </div>
-                  <p className="text-right">
-                    Used on <br />
-                    <span className="font-medium text-[#6B7280]">
-                      Sep 12, 2023
-                    </span>
-                  </p>
-                </div>
-              </div>
             </div>
           </section>
         )}
-        {/* WALLETS TAB */}
+
         {activeTab === "wallets" && (
           <div className="space-y-6">
             <Subheading2 className="text-[20px] font-semibold text-[#111827] normal-case px-1">
@@ -641,79 +556,9 @@ export default function MobileProfilePage() {
                 USE WALLET AT CHECKOUT
               </button>
             </section>
-
-            <div className="space-y-4 px-1">
-              <Subheading2 className="text-[16px] font-semibold text-[#111827] normal-case">
-                Wallet Activity
-              </Subheading2>
-
-              <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
-                {[
-                  {
-                    type: "debited",
-                    title: "Purchased: Vintage Travel Set",
-                    date: "Oct 24 • 2023 • 4:20 PM",
-                    amount: "- $20.00",
-                    status: "Debited",
-                  },
-                  {
-                    type: "credited",
-                    title: "Refund: Vintage Travel Set",
-                    date: "Oct 24 • 2023 • 4:20 PM",
-                    amount: "+ $20.00",
-                    status: "Credited",
-                  },
-                  {
-                    type: "credited",
-                    title: "Cashback: Vintage Travel Set",
-                    date: "Oct 24 • 2023 • 4:20 PM",
-                    amount: "+ $20.00",
-                    status: "Credited",
-                  },
-                  {
-                    type: "debited",
-                    title: "Purchased: Vintage Travel Set",
-                    date: "Oct 24 • 2023 • 4:20 PM",
-                    amount: "- $20.00",
-                    status: "Debited",
-                  },
-                  {
-                    type: "credited",
-                    title: "Added: Vintage Travel Set",
-                    date: "Oct 24 • 2023 • 4:20 PM",
-                    amount: "+ $20.00",
-                    status: "Credited",
-                  },
-                ].map((item, i) => (
-                  <div key={i} className={`flex items-center gap-4 p-4 ${i !== 4 ? 'border-b border-gray-100' : ''}`}>
-                    <div className="h-12 w-12 flex-shrink-0 rounded-full bg-gray-200" />
-                    <div className="flex-1">
-                      <p className="text-[13px] font-medium text-[#111827]">
-                        {item.title}
-                      </p>
-                      <p className="mt-1 text-[11px] text-[#9CA3AF]">
-                        {item.date}
-                      </p>
-                    </div>
-                    <div className="text-right flex flex-col items-end">
-                      <p
-                        className={`text-[13px] font-bold ${item.type === "credited" ? "text-green-600" : "text-black"
-                          }`}
-                      >
-                        {item.amount}
-                      </p>
-                      <p className="mt-1 text-[9px] text-gray-400 capitalize">
-                        {item.status}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         )}
 
-        {/* PAYMENTS TAB */}
         {activeTab === "payments" && (
           <section className="space-y-6">
             <div className="px-1">
@@ -722,7 +567,6 @@ export default function MobileProfilePage() {
               </Subheading2>
             </div>
 
-            {/* Secure Payment Storage */}
             <div className="rounded-xl border border-[#E5E7EB] bg-[#F5F9FF] p-4 shadow-sm flex items-start gap-4">
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#D6E6FF] text-[#2563EB]">
                 <ShieldCheck size={20} />
@@ -738,142 +582,6 @@ export default function MobileProfilePage() {
               <div className="mt-1 flex-shrink-0 text-[#2563EB]">
                 <CheckCircle2 size={16} className="fill-[#2563EB] text-white" />
               </div>
-            </div>
-
-            {/* Credit and Debit Cards */}
-            <div className="px-1 mt-4">
-              <Subheading2 className="text-[16px] font-semibold text-[#111827] normal-case mb-4">
-                Credit and Debit Cards
-              </Subheading2>
-
-              <div className="space-y-4">
-                {/* Primary Card */}
-                <div className="rounded-xl bg-white p-5 shadow-sm space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-[#B4A06B] mb-2">
-                        PRIMARY CARD
-                      </p>
-                      <div className="flex items-center gap-3 text-[20px] font-bold tracking-[0.1em] text-[#111827]">
-                        <span className="flex gap-1 text-[16px]">
-                          <span>•</span><span>•</span><span>•</span><span>•</span>
-                          <span className="ml-1">•</span><span>•</span><span>•</span><span>•</span>
-                          <span className="ml-1">•</span><span>•</span><span>•</span><span>•</span>
-                        </span>
-                        <span className="text-[18px]">4242</span>
-                      </div>
-                    </div>
-                    <div className="h-8 w-12 rounded bg-neutral-100 flex-shrink-0" />
-                  </div>
-
-                  <div className="flex justify-between border-t border-gray-100 pt-3">
-                    <div>
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-[#B4A06B] mb-1">
-                        CARD HOLDER
-                      </p>
-                      <p className="text-[12px] font-bold uppercase tracking-wide text-[#111827]">
-                        JANE DOE
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-[#B4A06B] mb-1">
-                        EXPIRES
-                      </p>
-                      <p className="text-[12px] font-bold tracking-wide text-[#111827]">
-                        12/25
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="rounded-full bg-[#E6F8F0] px-3 py-1 text-[9px] font-bold uppercase text-[#10B981]">
-                      PRIMARY
-                    </span>
-                    <button className="text-[11px] font-bold text-[#E11B1B]">
-                      Remove
-                    </button>
-                  </div>
-                </div>
-
-                {/* Secondary Card */}
-                <div className="rounded-xl bg-white p-5 shadow-sm space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-[#B4A06B] mb-2">
-                        PRIMARY CARD
-                      </p>
-                      <div className="flex items-center gap-3 text-[20px] font-bold tracking-[0.1em] text-[#111827]">
-                        <span className="flex gap-1 text-[16px]">
-                          <span>•</span><span>•</span><span>•</span><span>•</span>
-                          <span className="ml-1">•</span><span>•</span><span>•</span><span>•</span>
-                          <span className="ml-1">•</span><span>•</span><span>•</span><span>•</span>
-                        </span>
-                        <span className="text-[18px]">8839</span>
-                      </div>
-                    </div>
-                    <div className="h-8 w-12 rounded bg-neutral-100 flex-shrink-0" />
-                  </div>
-
-                  <div className="flex justify-between border-t border-gray-100 pt-3">
-                    <div>
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-[#B4A06B] mb-1">
-                        CARD HOLDER
-                      </p>
-                      <p className="text-[12px] font-bold uppercase tracking-wide text-[#111827]">
-                        JANE DOE
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-[#B4A06B] mb-1">
-                        EXPIRES
-                      </p>
-                      <p className="text-[12px] font-bold tracking-wide text-[#111827]">
-                        12/25
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-end pt-2">
-                    <button className="text-[11px] font-bold text-[#E11B1B]">
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* UPI & Wallets */}
-            <div className="px-1 mt-6">
-              <Subheading2 className="text-[16px] font-semibold text-[#111827] normal-case mb-4">
-                UPI & Wallets
-              </Subheading2>
-
-              <div className="rounded-xl bg-white p-4 shadow-sm flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded bg-neutral-100 flex-shrink-0" />
-                  <div>
-                    <p className="text-[13px] font-bold text-[#111827] mb-1">
-                      jane.doe@oksdi
-                    </p>
-                    <div className="flex items-center gap-2 text-[10px] text-[#9CA3AF]">
-                      <span>Jane Doe</span>
-                      <span className="h-2 w-[1px] bg-neutral-300" />
-                      <span>UPI ID</span>
-                    </div>
-                  </div>
-                </div>
-                <button className="text-[11px] font-bold text-[#E11B1B]">
-                  Remove
-                </button>
-              </div>
-            </div>
-
-            {/* Add New Method Button */}
-            <div className="px-1 pt-4">
-              <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#111827] py-4 text-white transition-colors hover:bg-black">
-                <PlusCircle size={18} />
-                <span className="text-[13px] font-medium">Add New Payment Method</span>
-              </button>
             </div>
           </section>
         )}

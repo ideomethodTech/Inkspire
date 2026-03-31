@@ -7,6 +7,7 @@ import { User, ShoppingBag, Tag, Wallet, CreditCard, LogOut } from "lucide-react
 import clsx from "clsx";
 import { Caption, Subheading2 } from "@/components/typography";
 import { getProfile } from "@/api/profile";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 const NAV_ITEMS = [
   { label: "My Profile", href: "/user/profile", icon: User },
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
 export default function AccountSidebar() {
   const pathname = usePathname();
   const [displayName, setDisplayName] = useState("User");
+  const { logout, loading: logoutLoading } = useAuth();
 
   useEffect(() => {
     const loadUser = async () => {
@@ -97,9 +99,13 @@ export default function AccountSidebar() {
       </nav>
 
       {/* Logout Button */}
-      <button className="flex w-full items-center gap-3 rounded-md px-4 py-3 text-[14px] font-medium uppercase tracking-[0.08em] text-[#6D6D6D] transition-colors hover:bg-neutral-100">
+      <button 
+        onClick={logout}
+        disabled={logoutLoading}
+        className="flex w-full items-center gap-3 rounded-md px-4 py-3 text-[14px] font-medium uppercase tracking-[0.08em] text-[#6D6D6D] transition-colors hover:bg-neutral-100 disabled:opacity-50"
+      >
         <LogOut size={18} className="text-[#6D6D6D]" />
-        <span>Logout</span>
+        <span>{logoutLoading ? "Logging out..." : "Logout"}</span>
       </button>
     </aside>
   );

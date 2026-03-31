@@ -17,7 +17,7 @@ function DesktopProfilePage() {
   const { addresses, loading: addressLoading, error: addressError, addAddress, updateAddress: editAddress, deleteAddress } = useAddress();
   
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [profileForm, setProfileForm] = useState({ name: "", dob: "", phone_number: "" });
+  const [profileForm, setProfileForm] = useState({ displayName: "", dob: "", phoneNumber: "" });
   
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState(null);
@@ -30,12 +30,28 @@ function DesktopProfilePage() {
     zip: ""
   });
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      
+      return `${month} / ${day} / ${year}`;
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   useEffect(() => {
     if (profile) {
       setProfileForm({
-        name: profile.name || profile.displayName || "",
-        dob: profile.dob || profile.dateOfBirth || "",
-        phone_number: profile.phone_number || profile.phone || profile.mobile || ""
+        displayName: profile.displayName || profile.name || "",
+        dob: formatDate(profile.dob || profile.dateOfBirth),
+        phoneNumber: profile.phoneNumber || profile.phone || profile.phone_number || profile.mobile || ""
       });
     }
   }, [profile]);
@@ -135,8 +151,8 @@ function DesktopProfilePage() {
               <div>
                 <Label className="mb-2 block text-[11px] uppercase tracking-wider text-neutral-500">Full Name</Label>
                 <Input 
-                  value={profileForm.name} 
-                  onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
+                  value={profileForm.displayName} 
+                  onChange={(e) => setProfileForm({...profileForm, displayName: e.target.value})}
                   className="bg-neutral-50"
                   required
                 />
@@ -154,8 +170,8 @@ function DesktopProfilePage() {
               <div>
                 <Label className="mb-2 block text-[11px] uppercase tracking-wider text-neutral-500">Mobile Number</Label>
                 <Input 
-                  value={profileForm.phone_number} 
-                  onChange={(e) => setProfileForm({...profileForm, phone_number: e.target.value})}
+                  value={profileForm.phoneNumber} 
+                  onChange={(e) => setProfileForm({...profileForm, phoneNumber: e.target.value})}
                   className="bg-neutral-50"
                   required
                 />
@@ -168,11 +184,11 @@ function DesktopProfilePage() {
             <div className="space-y-6">
               <div>
                 <Caption className="mb-1 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">Full Name</Caption>
-                <Body1 className="text-[15px] font-medium text-[#20262B]">{profileForm.name || "Not provided"}</Body1>
+                <Body1 className="text-[15px] font-medium text-[#20262B]">{profileForm.displayName || "Not provided"}</Body1>
               </div>
               <div>
                 <Caption className="mb-1 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">Mobile Number</Caption>
-                <Body1 className="text-[15px] font-medium text-[#20262B]">{profileForm.phone_number || "Not provided"}</Body1>
+                <Body1 className="text-[15px] font-medium text-[#20262B]">{profileForm.phoneNumber || "Not provided"}</Body1>
               </div>
               <div>
                 <Caption className="mb-1 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">Date of Birth</Caption>
@@ -192,9 +208,9 @@ function DesktopProfilePage() {
                 icon={Phone}
                 iconColor="text-orange-500"
                 label="Mobile"
-                value={profileForm.phone_number || "Not provided"}
-                status={profileForm.phone_number ? "Verified" : "Not Verified"}
-                statusColor={profileForm.phone_number ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}
+                value={profileForm.phoneNumber || "Not provided"}
+                status={profileForm.phoneNumber ? "Verified" : "Not Verified"}
+                statusColor={profileForm.phoneNumber ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}
               />
             </div>
           </div>

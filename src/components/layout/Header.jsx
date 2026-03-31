@@ -9,6 +9,7 @@ import SearchOverlay from "@/components/search/SearchOverlay";
 import Image from "next/image";
 import MobileMenu from "./MobileMenu";
 import { getCart } from "@/api/cart";
+import { useAuthContext } from "@/context";
 
 
 export default function Header() {
@@ -16,20 +17,8 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false); 
   const [openMenu, setOpenMenu] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const { user, setUser } = useAuthContext();
   const [cartCount, setCartCount] = useState(0);
-
-  const loadStoredUser = useCallback(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const stored = window.localStorage.getItem("user");
-      const parsed = stored ? JSON.parse(stored) : null;
-      setUser(parsed);
-    } catch (err) {
-      console.warn("Failed to parse stored user", err);
-      setUser(null);
-    }
-  }, []);
 
   const refreshCartCount = useCallback(async () => {
     const token =
@@ -57,21 +46,17 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    loadStoredUser();
     refreshCartCount();
     const handleCartUpdate = () => refreshCartCount();
-    const handleStorage = () => loadStoredUser();
     if (typeof window !== "undefined") {
       window.addEventListener("cart:updated", handleCartUpdate);
-      window.addEventListener("storage", handleStorage);
     }
     return () => {
       if (typeof window !== "undefined") {
         window.removeEventListener("cart:updated", handleCartUpdate);
-        window.removeEventListener("storage", handleStorage);
       }
     };
-  }, [refreshCartCount, loadStoredUser]);
+  }, [refreshCartCount]);
   
 
 

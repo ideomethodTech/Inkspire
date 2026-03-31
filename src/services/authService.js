@@ -1,31 +1,32 @@
-// Auth API Service
+// src/services/authService.js
+import api from "@/lib/api";
 
-const API_URL = '/api/auth';
+export const loginUser = async (idToken) => {
+  try {
+    const response = await api.post("/auth/login", { idToken });
+    return response.data;
+  } catch (err) {
+    console.error("Login error:", err);
+    throw err;
+  }
+};
 
-export async function login(email, password) {
-  const res = await fetch(`${API_URL}/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-  return res.json();
-}
+export const registerUser = async (registrationData) => {
+  try {
+    const response = await api.post("/auth/register", registrationData);
+    return response.data;
+  } catch (err) {
+    console.error("Registration error:", err);
+    throw err;
+  }
+};
 
-export async function register(userData) {
-  const res = await fetch(`${API_URL}/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData),
-  });
-  return res.json();
-}
-
-export async function logout() {
-  const res = await fetch(`${API_URL}/logout`, { method: 'POST' });
-  return res.json();
-}
-
-export async function getCurrentUser() {
-  const res = await fetch(`${API_URL}/me`);
-  return res.json();
-}
+export const logoutUser = async () => {
+  try {
+    const response = await api.post("/auth/logout");
+    return response.data;
+  } catch (err) {
+    console.error("Logout error:", err);
+    throw err;
+  }
+};

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import PageWrapper from "@/components/layout/PageWrapper";
-import { Headline, Body2, Label } from "@/components/typography";
+import { Headline, Body2, Label, Caption } from "@/components/typography";
 import Button from "@/components/ui/Buttons";
 import {
   getCart,
@@ -19,21 +19,17 @@ const FALLBACK_IMAGE =
 
 const normalizeCartItems = (rawItems = []) => {
   return rawItems.map((item, index) => {
-    const product = item.product || item;
-    const productId = item.productId || product.id || product._id || item.id;
-    const variantIndex =
-      typeof item.variantIndex === "number" ? item.variantIndex : 0;
-    const variant = product?.variants?.[variantIndex];
-    const price = item.price ?? variant?.price ?? product?.price ?? 0;
-    const size = item.size || variant?.size || "N/A";
-    const image = product?.images?.[0] || item.image || FALLBACK_IMAGE;
-    const title = product?.name || product?.title || item.title || "Product";
+    // Handling backend specific fields like productName, productImage, variantPrice
+    const productId = item.productId;
+    const title = item.productName || "Product";
+    const image = item.productImage || FALLBACK_IMAGE;
+    const price = item.variantPrice || 0;
+    const size = item.variant || "N/A";
     const quantity = item.quantity ?? 1;
 
     return {
-      id: `${productId || "item"}-${variantIndex}-${index}`,
+      id: `${productId || "item"}-${index}`,
       productId,
-      variantIndex,
       title,
       price,
       size,
@@ -45,44 +41,13 @@ const normalizeCartItems = (rawItems = []) => {
 
 const enrichCartItems = async (rawItems = []) => {
   const normalized = normalizeCartItems(rawItems);
-  const cache = new Map();
-
-  const enriched = await Promise.all(
-    normalized.map(async (item) => {
-      if (!item.productId) return item;
-      const needsProduct =
-        item.price === 0 ||
-        item.title === "Product" ||
-        item.image === FALLBACK_IMAGE;
-      if (!needsProduct) return item;
-
-      if (!cache.has(item.productId)) {
-        cache.set(item.productId, getProductById(item.productId));
-      }
-
-      try {
-        const product = await cache.get(item.productId);
-        const variants = Array.isArray(product?.variants) ? product.variants : [];
-        const variant = variants[item.variantIndex] || variants[0];
-        return {
-          ...item,
-          title: product?.title || product?.name || item.title,
-          image: product?.images?.[0] || item.image || FALLBACK_IMAGE,
-          price: item.price || variant?.price || product?.price || item.price,
-          size: item.size || variant?.size || item.size,
-        };
-      } catch (err) {
-        console.warn("Failed to enrich cart item", err);
-        return item;
-      }
-    })
-  );
-
-  return enriched;
+  // Optional: Add further enrichment if backend fields are incomplete
+  return normalized;
 };
 
 export default function CartPage() {
   const [items, setItems] = useState([]);
+  const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -102,72 +67,85 @@ export default function CartPage() {
     }
   };
 
-  useEffect(() => {
-    const fetchCart = async () => {
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      if (!token) {
-        console.warn("No token found, user not logged in");
-        setItems([]);
-        setError("Please sign in to view your cart.");
-        setLoading(false);
-        return;
-      }
+  const fetchCart = useCallback(async () => {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (!token) {
+      console.warn("No token found, user not logged in");
+      setItems([]);
+      setError("Please sign in to view your cart.");
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const res = await getCart();
-        const apiItems = res?.data?.items || res?.items || [];
-        if (res?.success && apiItems.length > 0) {
-          const hydrated = await enrichCartItems(apiItems);
-          setItems(hydrated);
-          setError("");
-          emitCartUpdate();
-        } else {
-          setItems([]);
-          emitCartUpdate();
-        }
-      } catch (err) {
-        console.error("Cart fetch error:", err);
-        setItems([]);
-        setError("Unable to load cart.");
+    try {
+      const res = await getCart();
+      const data = res?.data || res || null;
+      const apiItems = data?.items || [];
+      
+      if (res?.success && apiItems.length > 0) {
+        const hydrated = await enrichCartItems(apiItems);
+        setItems(hydrated);
+        setApiData(data);
+        setError("");
         emitCartUpdate();
-      } finally {
-        setLoading(false);
+      } else {
+        setItems([]);
+        setApiData(null);
+        emitCartUpdate();
       }
-    };
-
-    fetchCart();
+    } catch (err) {
+      console.error("Cart fetch error:", err);
+      setItems([]);
+      setApiData(null);
+      setError("Unable to load cart.");
+      emitCartUpdate();
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const deliveryFee = 0;
-  
-  // Use discount from appliedCoupon response if available, otherwise calculate from percentage
-  const discount = useMemo(() => {
-    if (!appliedCoupon) return 0;
-    if (typeof appliedCoupon.discount === 'number') return appliedCoupon.discount;
-    if (typeof appliedCoupon.amount === 'number') return appliedCoupon.amount;
-    if (typeof appliedCoupon.percentage === 'number') return subtotal * (appliedCoupon.percentage / 100);
-    return 0;
-  }, [appliedCoupon, subtotal]);
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
 
-  // Use updatedTotal from appliedCoupon if available, otherwise calculate manually
+  const subtotal = useMemo(() => {
+    if (apiData && Number.isFinite(apiData.total)) return apiData.total;
+    return items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  }, [items, apiData]);
+
+  const discount = useMemo(() => {
+    if (apiData && Number.isFinite(apiData.discountAmount)) return apiData.discountAmount;
+    return 0;
+  }, [apiData]);
+
   const total = useMemo(() => {
-    if (appliedCoupon && typeof appliedCoupon.updatedTotal === 'number') {
-      return appliedCoupon.updatedTotal + deliveryFee;
-    }
-    return subtotal + deliveryFee - discount;
-  }, [appliedCoupon, subtotal, deliveryFee, discount]);
+    if (apiData && Number.isFinite(apiData.discountedTotal)) return apiData.discountedTotal;
+    if (apiData && Number.isFinite(apiData.total)) return apiData.total;
+    return subtotal - discount;
+  }, [apiData, subtotal, discount]);
 
   const handleApplyCoupon = async (e) => {
-    e.preventDefault();
-    const orderTotal = subtotal + deliveryFee;
+    if (e?.preventDefault) e.preventDefault();
+    const orderTotal = subtotal;
     const code = couponCode.trim();
     try {
-      await applyCoupon(code, orderTotal);
+      const res = await applyCoupon(code, orderTotal);
       setCouponCode("");
+      if (res) {
+        fetchCart(); 
+      }
     } catch (err) {
       // Error handled by hook
+    }
+  };
+
+  const handleRemoveCoupon = async () => {
+    try {
+      await removeCoupon();
+      fetchCart(); 
+    } catch (err) {
+      console.error("Failed to remove coupon", err);
     }
   };
 
@@ -176,7 +154,6 @@ export default function CartPage() {
     try {
       const res = await updateCartItem({
         productId: item.productId,
-        variantIndex: item.variantIndex,
         quantity: nextQty,
       });
       if (res?.success) {
@@ -185,7 +162,7 @@ export default function CartPage() {
             it.id === item.id ? { ...it, quantity: nextQty } : it
           )
         );
-        emitCartUpdate();
+        fetchCart(); 
       }
     } catch (err) {
       console.error("Failed to update cart item", err);
@@ -197,11 +174,10 @@ export default function CartPage() {
     try {
       const res = await removeCartItem({
         productId: item.productId,
-        variantIndex: item.variantIndex,
       });
       if (res?.success) {
         setItems((prev) => prev.filter((it) => it.id !== item.id));
-        emitCartUpdate();
+        fetchCart(); 
       }
     } catch (err) {
       console.error("Failed to remove cart item", err);
@@ -213,6 +189,7 @@ export default function CartPage() {
       const res = await clearCart();
       if (res?.success) {
         setItems([]);
+        setApiData(null);
         emitCartUpdate();
       }
     } catch (err) {
@@ -318,10 +295,13 @@ export default function CartPage() {
                   </button>
                 </form>
                 {couponError && <p className="mt-2 text-[11px] text-red-500">{couponError}</p>}
-                {appliedCoupon && (
+                {(appliedCoupon || apiData?.appliedCoupon) && (
                   <div className="mt-3 flex items-center justify-between rounded bg-green-50 p-2 text-[11px] text-green-700">
-                    <span>Coupon <strong>{appliedCoupon.code}</strong> applied!</span>
-                    <button onClick={removeCoupon} className="font-bold underline">Remove</button>
+                    <span>
+                      Coupon <strong>{apiData?.appliedCoupon || appliedCoupon?.code}</strong>{" "}
+                      applied!
+                    </span>
+                    <button onClick={handleRemoveCoupon} className="font-bold underline">Remove</button>
                   </div>
                 )}
               </div>
@@ -329,12 +309,12 @@ export default function CartPage() {
               <div className="mt-6 space-y-3 text-[13px] text-[#20262B]">
                 <div className="flex items-center justify-between">
                   <span>Order Value</span>
-                  <span>Rs.{subtotal}</span>
+                  <span>Rs.{subtotal.toFixed(2)}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex items-center justify-between text-green-600 font-medium">
-                    <span>Discount</span>
-                    <span>- Rs.{discount}</span>
+                    <span>Coupon Discount</span>
+                    <span>- Rs.{discount.toFixed(2)}</span>
                   </div>
                 )}
               </div>
@@ -342,9 +322,17 @@ export default function CartPage() {
               <div className="mt-10 flex items-center justify-between">
                 <Label>Total</Label>
                 <Body2 className="text-[18px] font-semibold text-[#20262B]">
-                  Rs.{total}
+                  Rs.{total.toFixed(2)}
                 </Body2>
               </div>
+
+              {discount > 0 && (
+                <div className="mt-4 rounded-md bg-green-50 p-3 text-center">
+                  <Caption className="text-[12px] font-medium text-green-700">
+                    You saved Rs.{discount.toFixed(2)} on this order! 🎉
+                  </Caption>
+                </div>
+              )}
 
               <Button
                 className="mt-6 h-12 w-full bg-black text-white"

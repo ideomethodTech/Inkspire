@@ -10,7 +10,7 @@ export function useProfile() {
     setLoading(true);
     try {
       const data = await getProfile();
-      setProfile(data?.data || data);
+      setProfile(data?.user || data?.data || data);
       setError(null);
     } catch (err) {
       setError(err.message || "Failed to fetch profile");
@@ -27,7 +27,7 @@ export function useProfile() {
     setLoading(true);
     try {
       const result = await updateProfileApi(profileData);
-      setProfile(result?.data || result);
+      setProfile(result?.user || result?.data || result);
       return result;
     } catch (err) {
       setError(err.message || "Failed to update profile");

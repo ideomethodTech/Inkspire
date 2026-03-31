@@ -71,12 +71,6 @@ export const register = async (req, res) => {
         message: "Email already exists"
       });
     }
-    if (error.code === 'auth/invalid-phone-number') {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid phone number format"
-      });
-    }
     
     return res.status(500).json({
       success: false,
@@ -278,6 +272,25 @@ export const updateProfile = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || "Failed to update profile"
+    });
+  }
+};
+
+/**
+ * LOGOUT - Client-side token removal signal
+ */
+export const logout = async (req, res) => {
+  try {
+    // In JWT-based auth, logout is primarily client-side (deleting the token).
+    // This endpoint provides a clear success response for the client.
+    return res.json({
+      success: true,
+      message: "Logged out successfully"
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error during logout"
     });
   }
 };

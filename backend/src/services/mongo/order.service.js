@@ -78,29 +78,39 @@ export class OrderService {
             let discount = 0;
             let couponApplied = null;
 
-            if (couponCode) {
-                const coupon = await Coupon.findOne({ code: couponCode.toUpperCase() }).session(session);
+            // Use provided coupon code OR the one already in the cart
+            const effectiveCouponCode = couponCode || cart.appliedCoupon;
+
+            if (effectiveCouponCode) {
+                const coupon = await Coupon.findOne({ code: effectiveCouponCode.toUpperCase() }).session(session);
                 if (!coupon) {
-                    throw new Error('Invalid coupon code');
-                }
-                
-                // Manual validation since we are inside a transaction/session context
-                const validation = coupon.isValid(userId, subtotal);
-                if (!validation.valid) {
-                    throw new Error(validation.reason);
-                }
+                    // Only throw error if the user EXPLICITLY provided a wrong coupon
+                    // If it was just an old cart coupon, we can ignore it (it will be cleared)
+                    if (couponCode) {
+                        throw new Error('Invalid coupon code');
+                    }
+                } else {
+                    // Manual validation since we are inside a transaction/session context
+                    const validation = coupon.isValid(userId, subtotal);
+                    if (!validation.valid) {
+                        // Same logic: throw error only if user explicitly provided it
+                        if (couponCode) {
+                            throw new Error(validation.reason);
+                        }
+                    } else {
+                        discount = coupon.calculateDiscount(subtotal);
+                        discount = Math.min(discount, subtotal); // Ensure discount <= subtotal
+                        
+                        couponApplied = {
+                            code: coupon.code,
+                            discount: discount
+                        };
 
-                discount = coupon.calculateDiscount(subtotal);
-                discount = Math.min(discount, subtotal); // Ensure discount <= subtotal
-                
-                couponApplied = {
-                    code: coupon.code,
-                    discount: discount
-                };
-
-                // Increment usage count
-                coupon.usedCount += 1;
-                await coupon.save({ session });
+                        // Increment usage count
+                        coupon.usedCount += 1;
+                        await coupon.save({ session });
+                    }
+                }
             }
 
             // 4. Calculate totals

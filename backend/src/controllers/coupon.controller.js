@@ -40,6 +40,18 @@ export class CouponController {
     }
   }
 
+  // Remove coupon
+  static async removeCoupon(req, res) {
+    try {
+      const userId = req.user.userId;
+      const result = await CouponService.removeCoupon(userId);
+      return res.json(result);
+    } catch (error) {
+      console.error('Remove Coupon Error:', error);
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
   // Admin: Create Coupon
   static async createCoupon(req, res) {
     try {

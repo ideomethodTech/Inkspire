@@ -11,4 +11,7 @@ router.get('/', authenticate, CouponController.getCoupons);
 // Apply coupon (usually called during checkout, but can be standalone validation)
 router.post('/apply', authenticate, CouponController.applyCoupon);
 
+// Remove coupon
+router.delete('/remove', authenticate, CouponController.removeCoupon);
+
 export default router;

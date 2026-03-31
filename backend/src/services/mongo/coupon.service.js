@@ -1,4 +1,5 @@
 import Coupon from '../../models/mongo/coupon.model.js';
+import Cart from '../../models/mongo/cart.model.js';
 
 export class CouponService {
   // Create coupon (Admin)
@@ -77,12 +78,50 @@ export class CouponService {
     
     // Ensure discount doesn't exceed total
     const finalDiscount = Math.min(discountAmount, orderTotal);
+    const finalTotal = orderTotal - finalDiscount;
+
+    // Persist to Cart
+    await Cart.findOneAndUpdate(
+      { userId },
+      { 
+        $set: { 
+          appliedCoupon: coupon.code,
+          discountAmount: finalDiscount,
+          discountedTotal: finalTotal
+        } 
+      }
+    );
 
     return {
       success: true,
       couponCode: coupon.code,
       discountAmount: finalDiscount,
-      finalTotal: orderTotal - finalDiscount
+      finalTotal: finalTotal
+    };
+  }
+
+  // Remove Coupon
+  static async removeCoupon(userId) {
+    const cart = await Cart.findOneAndUpdate(
+      { userId },
+      { 
+        $set: { 
+          appliedCoupon: null,
+          discountAmount: 0,
+          discountedTotal: 0
+        } 
+      },
+      { new: true }
+    );
+
+    if (!cart) {
+      throw new Error('Cart not found');
+    }
+
+    return {
+      success: true,
+      message: 'Coupon removed successfully',
+      total: cart.total
     };
   }
 }

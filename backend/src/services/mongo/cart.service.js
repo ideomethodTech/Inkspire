@@ -1,6 +1,7 @@
 // FIX THE IMPORT PATH
 import Cart from "../../models/mongo/cart.model.js";
 import Product from "../../models/mongo/product.model.js";
+import Coupon from "../../models/mongo/coupon.model.js";
 
 export class CartService {
   // Get user's cart
@@ -12,13 +13,13 @@ export class CartService {
       
       if (!cart) {
         // Create empty cart if doesn't exist
-        cart = await Cart.create({
+        const newCart = await Cart.create({
           userId,
           items: [],
           total: 0,
           itemCount: 0
         });
-        return this.formatCartResponse(cart);
+        return this.formatCartResponse(newCart);
       }
       
       // Calculate total with current prices
@@ -41,11 +42,41 @@ export class CartService {
           addedAt: item.addedAt
         };
       });
+
+      // Recalculate Coupon if exists
+      let discountAmount = 0;
+      let appliedCoupon = cart.appliedCoupon;
+
+      if (appliedCoupon) {
+        const coupon = await Coupon.findOne({ code: appliedCoupon, isActive: true });
+        if (coupon) {
+          const validation = coupon.isValid(userId, total);
+          if (validation.valid) {
+            discountAmount = coupon.calculateDiscount(total);
+          } else {
+            // Coupon no longer valid (e.g., total dropped below minOrderValue)
+            appliedCoupon = null;
+            discountAmount = 0;
+          }
+        } else {
+          appliedCoupon = null;
+          discountAmount = 0;
+        }
+      }
       
-      // Update cart total
+      const discountedTotal = Math.max(0, total - discountAmount);
+      const itemCount = formattedItems.reduce((sum, item) => sum + item.quantity, 0);
+
+      // Update cart in DB
       await Cart.updateOne(
         { userId },
-        { total, itemCount: formattedItems.reduce((sum, item) => sum + item.quantity, 0) }
+        { 
+          total, 
+          itemCount,
+          appliedCoupon,
+          discountAmount,
+          discountedTotal
+        }
       );
       
       return {
@@ -53,9 +84,12 @@ export class CartService {
         data: {
           items: formattedItems,
           total,
-          itemCount: formattedItems.reduce((sum, item) => sum + item.quantity, 0),
+          appliedCoupon,
+          discountAmount,
+          discountedTotal,
+          itemCount,
           userId,
-          updatedAt: cart.updatedAt
+          updatedAt: new Date()
         }
       };
     } catch (error) {
@@ -198,7 +232,14 @@ export class CartService {
     try {
       await Cart.findOneAndUpdate(
         { userId },
-        { items: [], total: 0, itemCount: 0 }
+        { 
+          items: [], 
+          total: 0, 
+          itemCount: 0,
+          appliedCoupon: null,
+          discountAmount: 0,
+          discountedTotal: 0
+        }
       );
       
       return {
@@ -219,6 +260,9 @@ export class CartService {
       data: {
         items: cart.items || [],
         total: cart.total || 0,
+        appliedCoupon: cart.appliedCoupon || null,
+        discountAmount: cart.discountAmount || 0,
+        discountedTotal: cart.discountedTotal || 0,
         itemCount: cart.itemCount || 0,
         userId: cart.userId,
         updatedAt: cart.updatedAt

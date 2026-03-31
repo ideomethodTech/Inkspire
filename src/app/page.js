@@ -5,14 +5,11 @@ import YourMood from "@/components/sections/YourMood";
 import ShopWithUs from "@/components/sections/ShopWithUs";
 import NewArrivals from "@/components/sections/NewArrivals";  
 import Testimonials from "@/components/sections/Testimonials";
-
-
-
-
+import PageWrapper from "@/components/layout/PageWrapper";
 
 export default function HomePage() {
   return (
-    <div className="overflow-x-hidden">    
+    <PageWrapper>
       <Hero />
       <Bestseller />
       <PosterKit />
@@ -20,6 +17,6 @@ export default function HomePage() {
       <ShopWithUs />
       <NewArrivals />
       <Testimonials />
-    </div>
+    </PageWrapper>
   );
 }

@@ -112,35 +112,48 @@ export const login = async (req, res) => {
     const emailVerified = decodedToken.email_verified || false;
     const phoneNumber = decodedToken.phone_number || undefined;
 
-    // 2. Sync user to MongoDB (create or update)
-    let user = await User.findOne({ firebaseUid });
-    
-    if (!user) {
-      // Create new user in MongoDB
-      user = new User({
-        firebaseUid,
-        email,
-        displayName,
-        photoURL,
-        phoneNumber,
-        authProvider,
-        emailVerified,
-        role: 'user'
-      });
-      await user.save();
-      console.log(`✅ New user synced to MongoDB: ${email}`);
-    } else {
-      // Update existing user
-      user.displayName = displayName || user.displayName;
-      user.photoURL = photoURL || user.photoURL;
-      if (phoneNumber && !user.phoneNumber) user.phoneNumber = phoneNumber; // Only update if missing to avoid overwriting custom input
-      user.authProvider = authProvider;
-      user.emailVerified = emailVerified;
-      user.lastLoginAt = new Date();
-      await user.save();
-      console.log(`✅ User updated in MongoDB: ${email}`);
-    }
+   // 2. Sync user to MongoDB (create or update)
+let user = await User.findOne({ firebaseUid });
 
+if (!user) {
+  // Create new user in MongoDB
+  user = new User({
+    firebaseUid,
+    email,
+    displayName,
+    photoURL,
+    phoneNumber,
+    authProvider,
+    emailVerified,
+    role: 'user'
+  });
+
+  await user.save();
+  console.log(`✅ New user synced to MongoDB: ${email}`);
+
+} else {
+  // ✅ ONLY set displayName if it doesn't exist (prevents overwrite bug)
+  if (!user.displayName && displayName) {
+    user.displayName = displayName;
+  }
+
+  // ✅ Safe updates (won’t overwrite user edits)
+  if (photoURL) {
+    user.photoURL = photoURL;
+  }
+
+  if (phoneNumber && !user.phoneNumber) {
+    user.phoneNumber = phoneNumber;
+  }
+
+  // ✅ Always update these
+  user.authProvider = authProvider;
+  user.emailVerified = emailVerified;
+  user.lastLoginAt = new Date();
+
+  await user.save();
+  console.log(`✅ User updated in MongoDB: ${email}`);
+}
     // 3. Generate JWT
     const token = generateToken({
       userId: user._id,

@@ -1,6 +1,7 @@
 import express from "express";
 import { authenticate } from "../middlewares/auth.middleware.js";
 import { getProfile, updateProfile } from "../controllers/auth.controller.js";
+import { validateProfile, handleValidationErrors } from "../middlewares/validation.middleware.js";
 
 const router = express.Router();
 
@@ -11,7 +12,7 @@ router.use(authenticate);
 router.get("/profile", getProfile);
 
 // Update user profile
-router.put("/profile", updateProfile);
+router.put("/profile", validateProfile, handleValidationErrors, updateProfile);
 
 // Test protected route
 router.get("/test", (req, res) => {

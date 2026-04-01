@@ -13,6 +13,7 @@ import {
   GoogleAuthProvider,
 } from "firebase/auth";
 import PhoneInput from 'react-phone-number-input';
+import countryList from 'react-select-country-list';
 
 export default function AuthModal({ initialMode = "signin", onClose, onLoginSuccess }) {
   const [mode, setMode] = useState(initialMode);
@@ -20,6 +21,8 @@ export default function AuthModal({ initialMode = "signin", onClose, onLoginSucc
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [dob, setDob] = useState("");
+  const countries = countryList().getData(); 
+  const [country, setCountry] = useState("IN");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const googleProvider = new GoogleAuthProvider();
@@ -67,6 +70,7 @@ export default function AuthModal({ initialMode = "signin", onClose, onLoginSucc
         password,
         displayName: name,
         dob,
+        country,
         phoneNumber: phoneNumber
       });
 
@@ -215,6 +219,21 @@ export default function AuthModal({ initialMode = "signin", onClose, onLoginSucc
               value={dob} 
               onChange={(e) => setDob(e.target.value)} 
             />
+           {/* Country */}
+<label className="mt-4 mb-2 block text-sm font-medium">
+  Country *
+</label>
+<select
+  value={country}
+  onChange={(e) => setCountry(e.target.value)}
+  className="w-full border rounded-md px-3 py-2"
+>
+  {countries.map((c) => (
+    <option key={c.value} value={c.value}>
+      {c.label}
+    </option>
+  ))}
+</select>
 
             {/* Phone Number */}
             <label className="mt-4 mb-2 block text-sm font-medium">

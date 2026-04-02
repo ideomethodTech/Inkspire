@@ -34,40 +34,47 @@ country: "India",
 zip: ""
 });
 
-const formatDate = (dateStr) => {
-if (!dateStr) return "";
-try {
-const date = new Date(dateStr);
-if (isNaN(date.getTime())) return dateStr;
-
-const day = String(date.getDate()).padStart(2, '0');
-const month = String(date.getMonth() + 1).padStart(2, '0');
-const year = date.getFullYear();
-
-return `${month} / ${day} / ${year}`;
-} catch (e) {
-return dateStr;
-}
+const formatDateForDisplay = (dateStr) => {
+  if (!dateStr) return "";
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month} / ${day} / ${year}`;
+  } catch (e) { return dateStr; }
 };
 
+// In useEffect — store ISO format in form state, not display format
 useEffect(() => {
-if (profile) {
-setProfileForm({
-  displayName: profile.displayName || profile.name || "",
-  dob: formatDate(profile.dob || profile.dateOfBirth),
-  phoneNumber: profile.phoneNumber || profile.phone || profile.phone_number || profile.mobile || ""
-});
-}
+  if (profile) {
+    const rawDob = profile.dob || profile.dateOfBirth;
+    let isoDob = "";
+    if (rawDob) {
+      const d = new Date(rawDob);
+      if (!isNaN(d.getTime())) {
+        isoDob = d.toISOString().split('T')[0]; // "YYYY-MM-DD"
+      }
+    }
+    setProfileForm({
+      displayName: profile.displayName || profile.name || "",
+      dob: isoDob,
+      phoneNumber: profile.phoneNumber || ""
+    });
+  }
 }, [profile]);
-
 const handleProfileSubmit = async (e) => {
-e.preventDefault();
-try {
-await updateProfile(profileForm);
-setIsEditingProfile(false);
-} catch (err) {
-console.error("Failed to update profile", err);
-}
+  e.preventDefault();
+  try {
+   await updateProfile({
+  ...profileForm,
+  phoneNumber: profileForm.phoneNumber || undefined
+});
+    setIsEditingProfile(false);
+  } catch (err) {
+    console.error("Failed to update profile", err);
+  }
 };
 
 const handleAddressSubmit = async (e) => {
@@ -166,9 +173,9 @@ return (
         <div>
           <Label className="mb-2 block text-[11px] uppercase tracking-wider text-neutral-500">Date of Birth</Label>
           <Input 
+            type="date"
             value={profileForm.dob} 
             onChange={(e) => setProfileForm({...profileForm, dob: e.target.value})}
-            placeholder="MM / DD / YYYY"
             className="bg-neutral-50"
             required
           />
@@ -202,7 +209,7 @@ required
         </div>
         <div>
           <Caption className="mb-1 text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">Date of Birth</Caption>
-          <Body1 className="text-[15px] font-medium text-[#20262B]">{profileForm.dob || "Not provided"}</Body1>
+          <Body1 className="text-[15px] font-medium text-[#20262B]">{profileForm.dob ? formatDateForDisplay(profileForm.dob) : "Not provided"}</Body1>
         </div>
       </div>
       <div className="space-y-3">

@@ -26,6 +26,7 @@ export default function AuthModal({ initialMode = "signin", onClose, onLoginSucc
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const googleProvider = new GoogleAuthProvider();
+  const [errors, setErrors] = useState({});
 
   // --- Handle login ---
   const handleLogin = async () => {
@@ -56,24 +57,59 @@ export default function AuthModal({ initialMode = "signin", onClose, onLoginSucc
     }
   };
 
+  const validateSignup = () => {
+  const newErrors = {};
+
+  // Name (2–100 chars)
+  if (!name || name.length < 2 || name.length > 100) {
+    newErrors.name = "Name must be between 2 and 100 characters";
+  }
+
+  // Email (basic check)
+  if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    newErrors.email = "Enter a valid email";
+  }
+
+  // Password (your UI rule)
+  if (!password || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,25}$/.test(password)) {
+    newErrors.password =
+      "Password must be 8–25 chars, include uppercase, lowercase & number";
+  }
+
+  // DOB (YYYY-MM-DD and must be past)
+  if (!dob || isNaN(new Date(dob))) {
+    newErrors.dob = "Enter a valid date";
+  } else if (new Date(dob) >= new Date()) {
+    newErrors.dob = "DOB must be in the past";
+  }
+// Phone (E.164 format)
+if (!phoneNumber || !/^\+[1-9]\d{7,14}$/.test(phoneNumber)) {
+  newErrors.phoneNumber =
+    "Enter a valid international phone number (e.g. +2348012345678)";
+}
+  // Country
+ 
+  if (!country) {
+    newErrors.country = "Select a country";
+  }
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+
   // --- Handle signup ---
   const handleSignup = async () => {
-    if (!email) return alert("Please enter an email");
-    if (!password) return alert("Please enter a password");
-    if (!name) return alert("Please enter your name");
-    setLoading(true);
-
-    try {
-      // Backend handles Firebase creation as well per api-doc.md
-      const data = await registerUser({
-        email,
-        password,
-        displayName: name,
-        dob,
-        country,
-        phoneNumber: phoneNumber
-      });
-
+  if (!validateSignup()) return;
+  setLoading(true);
+  try {
+   const data = await registerUser({
+  email,
+  password,
+  displayName: name,
+  dob,
+  country,
+  phoneNumber: phoneNumber  
+});
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
@@ -182,50 +218,81 @@ export default function AuthModal({ initialMode = "signin", onClose, onLoginSucc
               Create your account to save posters, track orders, and manage your
               profile
             </p>
+{/* Name */}
+<label className="mb-2 block text-sm font-medium">Full Name *</label>
+<Input
+  value={name}
+  onChange={(e) => {
+    setName(e.target.value);
+    setErrors((prev) => ({ ...prev, name: "" }));
+  }}
+  placeholder="Full Name"
+/>
+{errors.name && (
+  <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+)}
 
-            {/* Name */}
-            <label className="mb-2 block text-sm font-medium">Full Name *</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" />
+{/* Email */}
+<label className="mt-4 mb-2 block text-sm font-medium">Email *</label>
+<Input
+  value={email}
+  onChange={(e) => {
+    setEmail(e.target.value);
+    setErrors((prev) => ({ ...prev, email: "" }));
+  }}
+  placeholder="Email"
+  type="email"
+/>
+{errors.email && (
+  <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+)}
 
-            {/* Email */}
-            <label className="mt-4 mb-2 block text-sm font-medium">Email *</label>
-            <Input 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              placeholder="Email" 
-              type="email" 
-            />
+{/* Password */}
+<label className="mt-4 mb-2 block text-sm font-medium">
+  Create a password *
+</label>
+<Input
+  type="password"
+  placeholder="Create password"
+  value={password}
+  onChange={(e) => {
+    setPassword(e.target.value);
+    setErrors((prev) => ({ ...prev, password: "" }));
+  }}
+/>
+<p className="mt-1 text-xs text-muted-foreground">
+  8–25 characters, 1 number, 1 uppercase, 1 lowercase
+</p>
+{errors.password && (
+  <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+)}
 
-            {/* Password */}
-            <label className="mt-4 mb-2 block text-sm font-medium">
-              Create a password *
-            </label>
-            <Input
-              type="password"
-              placeholder="Create password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              8–25 characters, 1 number, 1 uppercase, 1 lowercase
-            </p>
+{/* Date of birth */}
+<label className="mt-4 mb-2 block text-sm font-medium">
+  Date of birth *
+</label>
+<Input
+  type="date"
+  value={dob}
+  onChange={(e) => {
+    setDob(e.target.value);
+    setErrors((prev) => ({ ...prev, dob: "" }));
+  }}
+/>
+{errors.dob && (
+  <p className="text-red-500 text-xs mt-1">{errors.dob}</p>
+)}
 
-            {/* Date of birth */}
-            <label className="mt-4 mb-2 block text-sm font-medium">
-              Date of birth *
-            </label>
-            <Input 
-              placeholder="MM / DD / YYYY" 
-              value={dob} 
-              onChange={(e) => setDob(e.target.value)} 
-            />
-           {/* Country */}
+{/* Country */}
 <label className="mt-4 mb-2 block text-sm font-medium">
   Country *
 </label>
 <select
   value={country}
-  onChange={(e) => setCountry(e.target.value)}
+  onChange={(e) => {
+    setCountry(e.target.value);
+    setErrors((prev) => ({ ...prev, country: "" }));
+  }}
   className="w-full border rounded-md px-3 py-2"
 >
   {countries.map((c) => (
@@ -234,19 +301,29 @@ export default function AuthModal({ initialMode = "signin", onClose, onLoginSucc
     </option>
   ))}
 </select>
+{errors.country && (
+  <p className="text-red-500 text-xs mt-1">{errors.country}</p>
+)}
 
-            {/* Phone Number */}
-            <label className="mt-4 mb-2 block text-sm font-medium">
-              Phone Number *
-            </label>
-            <PhoneInput
-              international
-              defaultCountry="IN" // India
-              value={phoneNumber}
-              onChange={setPhoneNumber}
-              className="border rounded-md px-3 py-2"
-            />
-
+{/* Phone Number */}
+<label className="mt-4 mb-2 block text-sm font-medium">
+  Phone Number *
+</label>
+<PhoneInput
+  international
+  defaultCountry="IN"
+  value={phoneNumber}
+  onChange={(value) => {
+    setPhoneNumber(value);
+    setErrors((prev) => ({ ...prev, phoneNumber: "" }));
+  }}
+  className="border rounded-md px-3 py-2"
+/>
+{errors.phoneNumber && (
+  <p className="text-red-500 text-xs mt-1">
+    {errors.phoneNumber}
+  </p>
+)}
             {/* Newsletter checkbox */}
             <div className="mt-4 flex items-center gap-2">
               <Checkbox id="newsletter" />

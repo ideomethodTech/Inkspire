@@ -5,6 +5,8 @@ import { useState } from "react";
 import Button from "@/components/ui/Buttons";
 import { BodyXS, Caption } from "@/components/typography";
 import { addToCart } from "@/api/cart";
+import { useWishlist } from "@/context";
+import { Heart } from "lucide-react";
 
 export default function ProductCard({ product }) {
   const productId = product.id || product._id;
@@ -13,6 +15,7 @@ export default function ProductCard({ product }) {
   const hasPrice = Number.isFinite(priceNumber);
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
   const handleAddToCart = async (e) => {
     e.preventDefault();
@@ -44,6 +47,24 @@ export default function ProductCard({ product }) {
     }
   };
 
+  const handleWishlistToggle = async (e) => {
+    e.preventDefault();
+    const token =
+      typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
+    if (!token) {
+      alert("Please sign in to manage your wishlist.");
+      return;
+    }
+
+    if (isInWishlist(productId)) {
+      await removeFromWishlist(productId);
+    } else {
+      await addToWishlist(productId);
+    }
+  };
+
+  const isFavorited = isInWishlist(productId);
+
   return (
     <Link
       href={`/products/${productId}`}
@@ -58,13 +79,11 @@ export default function ProductCard({ product }) {
 
         <button
           type="button"
-          onClick={(e) => {
-            e.preventDefault();
-          }}
-          aria-label="Favorite"
-          className="absolute right-3 top-3 h-7 w-7 rounded-full bg-white/90 text-[10px] font-semibold uppercase tracking-wide shadow-sm hover:bg-white transition-colors"
+          onClick={handleWishlistToggle}
+          aria-label={isFavorited ? "Remove from wishlist" : "Add to wishlist"}
+          className={`absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm transition-colors hover:bg-white ${isFavorited ? "text-[#E11B1B]" : "text-neutral-400"}`}
         >
-          ♥
+          <Heart size={18} fill={isFavorited ? "currentColor" : "none"} />
         </button>
       </div>
 

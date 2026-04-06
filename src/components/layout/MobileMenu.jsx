@@ -2,14 +2,22 @@
 
 import { useState } from "react";
 import { ChevronRight, X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function MobileMenu({ onClose }) {
-  const [activeTab, setActiveTab] = useState("Posters");
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("POSTER");
 
-  const tabs = ["Posters", "Collections", "Stickers"];
+  const tabs = ["POSTER", "KIT", "STICKER"];
+
+  const handleLinkClick = (type) => {
+    router.push(`/products?type=${type.toLowerCase()}`);
+    onClose();
+  };
 
   const menuContent = {
-    Posters: [
+    POSTER: [
       { label: "New Arrivals", hasSubmenu: false },
       { label: "Best Selling", hasSubmenu: false },
       { label: "Split Posters", hasSubmenu: true },
@@ -17,8 +25,9 @@ export default function MobileMenu({ onClose }) {
       { label: "Collage Kits", hasSubmenu: true },
       { label: "Themed Kits", hasSubmenu: true },
       { label: "Retro Prints", hasSubmenu: true },
+      { label: "SEE ALL", isSpecial: true, type: "poster" },
     ],
-    Collections: [
+    KIT: [
       { label: "New Arrivals", hasSubmenu: false },
       { label: "Best Selling", hasSubmenu: false },
       { label: "Split Posters", hasSubmenu: true },
@@ -26,8 +35,9 @@ export default function MobileMenu({ onClose }) {
       { label: "Collage Kits", hasSubmenu: true },
       { label: "Themed Kits", hasSubmenu: true },
       { label: "Retro Prints", hasSubmenu: true },
+      { label: "SEE ALL", isSpecial: true, type: "kit" },
     ],
-    Stickers: [
+    STICKER: [
       { label: "New Arrivals", hasSubmenu: false },
       { label: "Best Selling", hasSubmenu: false },
       { label: "Split Posters", hasSubmenu: true },
@@ -35,6 +45,7 @@ export default function MobileMenu({ onClose }) {
       { label: "Collage Kits", hasSubmenu: true },
       { label: "Themed Kits", hasSubmenu: true },
       { label: "Retro Prints", hasSubmenu: true },
+      { label: "SEE ALL", isSpecial: true, type: "stickers" },
     ],
   };
 
@@ -69,10 +80,19 @@ export default function MobileMenu({ onClose }) {
         <ul className="space-y-6">
           {menuContent[activeTab].map((item, index) => (
             <li key={index}>
-              <button className="flex items-center justify-between w-full text-left text-gray-700 hover:text-black transition-colors">
-                <span className="text-[15px]">{item.label}</span>
-                {item.hasSubmenu && <ChevronRight size={18} className="text-gray-400" />}
-              </button>
+              {item.isSpecial ? (
+                <button 
+                  onClick={() => handleLinkClick(item.type)}
+                  className="flex items-center justify-between w-full text-left text-black font-bold hover:text-black transition-colors"
+                >
+                  <span className="text-[15px] underline">{item.label}</span>
+                </button>
+              ) : (
+                <button className="flex items-center justify-between w-full text-left text-gray-700 hover:text-black transition-colors">
+                  <span className="text-[15px]">{item.label}</span>
+                  {item.hasSubmenu && <ChevronRight size={18} className="text-gray-400" />}
+                </button>
+              )}
             </li>
           ))}
         </ul>

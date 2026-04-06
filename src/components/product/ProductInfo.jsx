@@ -4,12 +4,17 @@ import { useState } from "react";
 import { Headline, Body1, Body2, BodyXS, Caption, Label } from "@/components/typography";
 import Button from "@/components/ui/Buttons";
 import { addToCart } from "@/api/cart";
+import { useWishlist } from "@/context";
+import { Heart } from "lucide-react";
 
 export default function ProductInfo({ product, onAddToCart }) {
   const [selectedSize, setSelectedSize] = useState("A4");
   const [quantity, setQuantity] = useState(1);
   const [expandedSections, setExpandedSections] = useState({});
   const [cartMessage, setCartMessage] = useState("");
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  const productId = product.id || product._id;
+  
   const priceNumber =
     typeof product.price === "number" ? product.price : Number(product.price);
   const hasPrice = Number.isFinite(priceNumber);
@@ -23,6 +28,23 @@ export default function ProductInfo({ product, onAddToCart }) {
     }));
   };
 
+  const handleWishlistToggle = async () => {
+    const token =
+      typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
+    if (!token) {
+      setCartMessage("Please sign in to manage your wishlist.");
+      return;
+    }
+
+    if (isInWishlist(productId)) {
+      await removeFromWishlist(productId);
+    } else {
+      await addToWishlist(productId);
+    }
+  };
+
+  const isFavorited = isInWishlist(productId);
+
   const handleAddToCart = async () => {
     setCartMessage("");
     const token =
@@ -32,7 +54,6 @@ export default function ProductInfo({ product, onAddToCart }) {
       return;
     }
 
-    const productId = product.id || product._id;
     if (!productId) {
       setCartMessage("Unable to add this product.");
       return;
@@ -152,12 +173,25 @@ export default function ProductInfo({ product, onAddToCart }) {
             +
           </button>
         </div>
-        <Button
-          onClick={handleAddToCart}
-          className="flex-1 bg-[#202125] hover:bg-[#202125] text-white uppercase tracking-[0.16em]"
-        >
-          ADD
-        </Button>
+        <div className="flex flex-1 items-center gap-2">
+          <Button
+            onClick={handleAddToCart}
+            className="flex-1 bg-[#202125] hover:bg-[#202125] text-white uppercase tracking-[0.16em]"
+          >
+            ADD
+          </Button>
+          <button
+            type="button"
+            onClick={handleWishlistToggle}
+            aria-label={isFavorited ? "Remove from wishlist" : "Add to wishlist"}
+            className={`flex h-12 w-12 items-center justify-center border-2 transition-all ${isFavorited
+                ? "border-[#E11B1B] text-[#E11B1B] bg-white"
+                : "border-neutral-300 text-[#20262B] hover:border-black"
+              }`}
+          >
+            <Heart size={20} fill={isFavorited ? "currentColor" : "none"} />
+          </button>
+        </div>
       </div>
       {cartMessage && (
         <Caption className="text-[11px] uppercase tracking-[0.16em] text-[#6D6D6D]">

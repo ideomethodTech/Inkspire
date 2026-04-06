@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import PageWrapper from "@/components/layout/PageWrapper";
 import { Headline, BodyXS, Caption } from "@/components/typography";
 import Button from "@/components/ui/Buttons";
@@ -12,6 +13,18 @@ const PRICE_MAX = 13499;
 const PAGE_SIZE = 10;
 
 export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProductsContent />
+    </Suspense>
+  );
+}
+
+function ProductsContent() {
+  const searchParams = useSearchParams();
+  const initialType = searchParams.get("type") || "";
+  const initialCategory = searchParams.get("category") || "";
+
   const [sortBy, setSortBy] = useState("newest");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [minPrice, setMinPrice] = useState(PRICE_MIN);
@@ -29,9 +42,14 @@ export default function ProductsPage() {
     priceRange: null,
     sortOptions: [],
   });
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedType, setSelectedType] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [selectedType, setSelectedType] = useState(initialType);
   const [selectedTags, setSelectedTags] = useState([]);
+
+  useEffect(() => {
+    setSelectedType(searchParams.get("type") || "");
+    setSelectedCategory(searchParams.get("category") || "");
+  }, [searchParams]);
 
   useEffect(() => {
     setPage(1);
@@ -57,8 +75,8 @@ export default function ProductsPage() {
           totalPages: apiTotalPages,
         } = await getProducts({
           sort: sortBy,
-          minPrice: minPriceValue,
-          maxPrice: maxPriceValue,
+          min_price: minPriceValue,
+          max_price: maxPriceValue,
           page,
           limit: PAGE_SIZE,
           category: selectedCategory || undefined,

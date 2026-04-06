@@ -9,7 +9,7 @@ import SearchOverlay from "@/components/search/SearchOverlay";
 import Image from "next/image";
 import MobileMenu from "./MobileMenu";
 import { getCart } from "@/api/cart";
-import { useAuthContext } from "@/context";
+import { useAuthContext, useWishlist } from "@/context";
 
 
 export default function Header() {
@@ -18,6 +18,7 @@ export default function Header() {
   const [openMenu, setOpenMenu] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, setUser } = useAuthContext();
+  const { wishlistCount } = useWishlist();
   const [cartCount, setCartCount] = useState(0);
 
   const refreshCartCount = useCallback(async () => {
@@ -92,7 +93,14 @@ className="hover:opacity-70 transition-opacity outline-none"
 >
 <Search size={18} />
 </button>
-<Heart size={18} className="hover:opacity-70 transition-opacity" />
+<Link href="/user/wishlist" aria-label="Wishlist" className="relative hover:opacity-70 transition-opacity">
+  <Heart size={18} />
+  {wishlistCount > 0 && (
+    <span className="absolute -top-2 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-black px-1 text-[10px] text-white">
+      {wishlistCount}
+    </span>
+  )}
+</Link>
 <Link
 href="/cart"
 aria-label="Cart"
@@ -119,17 +127,24 @@ className="relative hover:opacity-70 transition-opacity"
 
 {/* Desktop Navigation */}
 <nav className="flex items-center gap-10 text-sm font-medium">
-{/* Posters */}
+{/* Poster */}
 <div className="relative">
+<div className="flex items-center gap-1">
+<Link
+  href="/products?type=poster"
+  className={`text-[#2D2D2D] hover:opacity-70 pb-1 ${
+    openMenu === "posters" ? "border-b-2 border-black" : ""
+  }`}
+>
+  <span>POSTER</span>
+</Link>
 <button
 onClick={() => setOpenMenu(openMenu === "posters" ? null : "posters")}
-className={`flex items-center text-[#2D2D2D] gap-1 hover:opacity-70 pb-1 ${
-  openMenu === "posters" ? "border-b-2 border-black" : ""
-}`}
+className="hover:opacity-70 pb-1"
 >
-<span>POSTERS</span>
 <ChevronDown size={14} className={`transition-transform duration-200 ${openMenu === "posters" ? "rotate-180" : ""}`} />
 </button>
+</div>
 
 {/* Mega dropdown */}
 {openMenu === "posters" && (
@@ -161,6 +176,9 @@ className={`flex items-center text-[#2D2D2D] gap-1 hover:opacity-70 pb-1 ${
           <ul className="space-y-2 text-gray-500">
             <li>New Arrivals</li>
             <li>Best Selling</li>
+            <li className="pt-2">
+              <Link href="/products?type=poster" className="text-black font-semibold hover:underline">SEE ALL</Link>
+            </li>
           </ul>
         </div>
 
@@ -235,18 +253,23 @@ className={`flex items-center text-[#2D2D2D] gap-1 hover:opacity-70 pb-1 ${
 )}
 </div>
 
+{/* Kit */}
 <div className="relative">
+<div className="flex items-center gap-1">
+<Link
+  href="/products?type=kit"
+  className={`text-[#2D2D2D] hover:opacity-70 pb-1 ${
+    openMenu === "collections" ? "border-b-2 border-black" : ""
+  }`}
+>
+  <span>KIT</span>
+</Link>
 <button
 onClick={() =>
   setOpenMenu(openMenu === "collections" ? null : "collections")
 }
-className={`
-  flex items-center text-[#2D2D2D] gap-1 hover:opacity-70
-  ${openMenu === "collections" ? "border-b-2 border-black" : ""}
-  pb-1
-`}
+className="hover:opacity-70 pb-1"
 >
-<span>COLLECTIONS</span>
 <ChevronDown
   size={14}
   className={`transition-transform duration-200 ${
@@ -254,6 +277,7 @@ className={`
   }`}
 />
 </button>
+</div>
 
 {openMenu === "collections" && (
 <div
@@ -284,6 +308,9 @@ className={`
           <ul className="space-y-2 text-gray-500 mb-6">
             <li>New Arrivals</li>
             <li>Best Selling</li>
+            <li className="pt-2">
+              <Link href="/products?type=kit" className="text-black font-semibold hover:underline">SEE ALL</Link>
+            </li>
           </ul>
 
           <p className="font-medium mb-4">Split Posters</p>
@@ -364,17 +391,23 @@ className={`
 </div>
 
 
-{/* Stickers */}
+{/* Sticker */}
 <div className="relative">
+<div className="flex items-center gap-1">
+<Link
+  href="/products?type=sticker"
+  className={`text-[#2D2D2D] hover:opacity-70 pb-1 ${
+    openMenu === "stickers" ? "border-b-2 border-black" : ""
+  }`}
+>
+  <span>STICKER</span>
+</Link>
 <button
 onClick={() =>
 setOpenMenu(openMenu === "stickers" ? null : "stickers")
 }
-className={`flex items-center text-[#2D2D2D] gap-1 hover:opacity-70 pb-1 ${
-openMenu === "stickers" ? "border-b-2 border-black" : ""
-}`}
+className="hover:opacity-70 pb-1"
 >
-<span>STICKERS</span>
 <ChevronDown
 size={14}
 className={`transition-transform duration-200 ${
@@ -382,6 +415,7 @@ openMenu === "stickers" ? "rotate-180" : ""
 }`}
 />
 </button>
+</div>
 
 {/* Mega dropdown */}
 {openMenu === "stickers" && (
@@ -403,6 +437,9 @@ z-50
 <ul className="space-y-2 text-gray-500">
 <li>New Arrivals</li>
 <li>Best Selling</li>
+<li className="pt-2">
+  <Link href="/products?type=sticker2222222" className="text-black font-semibold hover:underline">SEE ALL</Link>
+</li>
 </ul>
 </div>
 
@@ -497,7 +534,15 @@ className="hover:opacity-70 transition-opacity outline-none"
   className="hover:opacity-70 transition-opacity"
 >
   <User size={18} />
-</button><Heart size={18} />
+</button>
+<Link href="/user/wishlist" aria-label="Wishlist" className="relative hover:opacity-70 transition-opacity">
+  <Heart size={18} />
+  {wishlistCount > 0 && (
+    <span className="absolute -top-2 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-black px-1 text-[10px] text-white">
+      {wishlistCount}
+    </span>
+  )}
+</Link>
 <Link
 href="/cart"
 aria-label="Cart"

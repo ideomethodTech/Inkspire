@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { User, ShoppingBag, Tag, Wallet, CreditCard, LogOut } from "lucide-react";
+import { User, ShoppingBag, Tag, Wallet, CreditCard, LogOut, Heart } from "lucide-react";
 import clsx from "clsx";
 import { Caption, Subheading2 } from "@/components/typography";
 import { getProfile } from "@/api/profile";
@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/hooks/useAuth";
 
 const NAV_ITEMS = [
   { label: "My Profile", href: "/user/profile", icon: User },
+  { label: "My Wishlist", href: "/user/wishlist", icon: Heart },
   { label: "My Orders", href: "/user/orders", icon: ShoppingBag },
   { label: "My Coupons", href: "/user/coupons", icon: Tag },
   { label: "My Wallets", href: "/user/wallets", icon: Wallet },

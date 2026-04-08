@@ -28,35 +28,43 @@ export default function AuthModal({ initialMode = "signin", onClose, onLoginSucc
   const googleProvider = new GoogleAuthProvider();
   const [errors, setErrors] = useState({});
 
-  // --- Handle login ---
-  const handleLogin = async () => {
-    if (!email) return alert("Please enter your email");
-    if (!password) return alert("Please enter your password");
-    setLoading(true);
+// --- Handle login ---
+const handleLogin = async () => {
+  if (!email) return alert("Please enter your email");
+  if (!password) return alert("Please enter your password");
 
-    try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+  setLoading(true);
 
-      const idToken = await userCredential.user.getIdToken();
-      const data = await realLoginUser(idToken);
+  try {
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+    const idToken = await userCredential.user.getIdToken();
+    const data = await realLoginUser(idToken);
 
-      if (onLoginSuccess) onLoginSuccess(data.user);
-      window.location.href = "/user/profile";
-    } catch (error) {
-      console.error("Login failed:", error);
-      alert(error.message || "Login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Save auth data
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
 
+    if (onLoginSuccess) onLoginSuccess(data.user);
+
+    // 🔥 ROLE-BASED REDIRECT
+    if (data.user.role === "admin") {
+  window.location.href = "/admin";
+} else {
+  window.location.href = "/user/profile";
+}
+
+  } catch (error) {
+    console.error("Login failed:", error);
+    alert(error.message || "Login failed");
+  } finally {
+    setLoading(false);
+  }
+};
   const validateSignup = () => {
   const newErrors = {};
 

@@ -30,7 +30,7 @@ export default function PostersPage() {
         console.log("PRODUCTS RESPONSE:", res.data);
 
         // adjust depending on backend response shape
-        setPosters(res.data.products || []);
+        setPosters(res.data.data?.products || []);
       } catch (err) {
         console.error("Error fetching products:", err);
       } finally {
@@ -140,16 +140,18 @@ export default function PostersPage() {
               const poster = formatPoster(product);
 
               return (
-                <tr key={product._id}>
+                <tr key={product._id || product.id || i}>
 
                   {/* Poster Info */}
                   <td className="p-4 flex items-center gap-3">
                     {poster.image ? (
-  <Image
-    src={poster.image}
-    alt={poster.title}
-    className="w-12 h-12 object-cover rounded-md"
-  />
+ <Image
+  src={poster.image}
+  alt={poster.title}
+  width={48}
+  height={48}
+  className="w-12 h-12 object-cover rounded-md"
+/>
 ) : (
   <div className="w-12 h-12 bg-gray-200 rounded-md" />
 )}

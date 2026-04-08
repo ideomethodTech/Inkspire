@@ -6,6 +6,10 @@ export const getWishlist = async () => {
     const res = await api.get("/api/wishlist");
     return res.data;
   } catch (err) {
+    // ✅ Silently ignore 404 — route may not exist for this user type
+    if (err?.response?.status === 404) {
+      return { success: false, data: { products: [] } };
+    }
     console.error("Error fetching wishlist:", err);
     return { success: false, data: { products: [] } };
   }

@@ -1,6 +1,6 @@
-// src/components/admin/RightPanel.jsx
 'use client';
 import React from 'react';
+import Link from 'next/link';
 
 const ImageIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -69,9 +69,13 @@ export default function RightPanel() {
           </div>
         </div>
 
-        <button className="w-full mt-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border border-gray-200 rounded-sm hover:bg-teal-100 hover:text-teal-600 hover:border-teal-400 transition">
+        {/* ✅ Changed: button → Link navigating to /admin/products */}
+        <Link
+          href="/admin/products"
+          className="block w-full mt-3 py-2 text-xs font-semibold text-center text-gray-500 bg-gray-50 border border-gray-200 rounded-sm hover:bg-teal-100 hover:text-teal-600 hover:border-teal-400 transition"
+        >
           View All Inventory
-        </button>
+        </Link>
       </div>
 
       {/* Needs Action */}

@@ -31,30 +31,83 @@ const AlertCircleIcon = () => (
 
 export default function RightPanel() {
   const [lowStockItems, setLowStockItems] = useState([]);
+  const [actionOrders, setActionOrders] = useState([]);
 
   useEffect(() => {
+    // Fetch low stock products
     const fetchLowStock = async () => {
       try {
         const res = await api.get('/api/admin/products');
         const products = res.data?.data?.products || [];
-
         const low = products
-          .map((p) => {
-            const totalStock = p.variants?.reduce((sum, v) => sum + (v.stock || 0), 0) ?? 0;
-            return { ...p, totalStock };
-          })
+          .map((p) => ({
+            ...p,
+            totalStock: p.variants?.reduce((sum, v) => sum + (v.stock || 0), 0) ?? 0,
+          }))
           .filter((p) => p.totalStock < 5)
           .sort((a, b) => a.totalStock - b.totalStock)
           .slice(0, 3);
-
         setLowStockItems(low);
       } catch (err) {
         console.error('Failed to fetch low stock products:', err);
       }
     };
 
+    // Fetch orders that need action
+    const fetchActionOrders = async () => {
+      try {
+        const res = await api.get('/api/orders/admin/all', {
+          params: { limit: 50 },
+        });
+        const orders = res.data?.data?.orders || [];
+
+        // Pending shipment = status is pending or processing
+        // Payment failed = paymentMethod.status is failed
+        const needsAction = orders
+          .filter((o) => {
+            const status = o.status?.current?.toLowerCase();
+            const payStatus = o.paymentMethod?.status?.toLowerCase();
+            return status === 'pending' || status === 'processing' || payStatus === 'failed';
+          })
+          .slice(0, 3); // show max 3
+
+        setActionOrders(needsAction);
+      } catch (err) {
+        console.error('Failed to fetch action orders:', err);
+      }
+    };
+
     fetchLowStock();
+    fetchActionOrders();
   }, []);
+
+  const getActionMeta = (order) => {
+    const payStatus = order.paymentMethod?.status?.toLowerCase();
+    const status = order.status?.current?.toLowerCase();
+
+    if (payStatus === 'failed') {
+      return {
+        label: 'Payment Failed',
+        icon: <AlertCircleIcon />,
+        iconBg: 'bg-red-100 text-red-600',
+        btnLabel: 'Retry',
+      };
+    }
+    if (status === 'pending') {
+      return {
+        label: 'Awaiting Processing',
+        icon: <TruckIcon />,
+        iconBg: 'bg-orange-100 text-orange-600',
+        btnLabel: 'Process',
+      };
+    }
+    return {
+      label: 'Needs Review',
+      icon: <AlertCircleIcon />,
+      iconBg: 'bg-yellow-100 text-yellow-600',
+      btnLabel: 'Review',
+    };
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -85,7 +138,6 @@ export default function RightPanel() {
                     <ImageIcon />
                   )}
                 </div>
-
                 <div className="flex-1 flex flex-col">
                   <span className="text-sm font-semibold text-gray-900 truncate max-w-[110px]">
                     {product.name}
@@ -94,11 +146,8 @@ export default function RightPanel() {
                     {product.variants?.[0]?.sku || product.sku || 'No SKU'}
                   </span>
                 </div>
-
                 <div className="flex flex-col items-end gap-0.5">
-                  <span className="text-sm font-bold text-red-600">
-                    {product.totalStock} left
-                  </span>
+                  <span className="text-sm font-bold text-red-600">{product.totalStock} left</span>
                   <span className="text-xs font-semibold text-teal-600 cursor-pointer hover:underline">
                     Restock
                   </span>
@@ -120,40 +169,44 @@ export default function RightPanel() {
       <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-bold uppercase text-gray-500">Needs Action</span>
-          <span className="text-[10px] font-bold uppercase bg-orange-100 text-orange-600 px-2 py-1 rounded-full">Pending</span>
+          <span className="text-[10px] font-bold uppercase bg-orange-100 text-orange-600 px-2 py-1 rounded-full">
+            Pending
+          </span>
         </div>
 
-        <div className="flex items-center gap-2 py-2">
-          <div className="w-8 h-8 flex items-center justify-center rounded-md bg-orange-100 text-orange-600 flex-shrink-0">
-            <TruckIcon />
-          </div>
-          <div className="flex-1 flex flex-col">
-            <span className="text-sm font-semibold text-gray-900">Order #8821</span>
-            <span className="text-xs text-gray-400">Delayed Shipment</span>
-          </div>
-          <button className="px-3 py-1.5 text-xs font-bold bg-teal-500 text-white rounded hover:opacity-90 transition">
-            Resolve
-          </button>
-        </div>
+        {actionOrders.length === 0 ? (
+          <p className="text-xs text-gray-400 py-2">No actions needed 🎉</p>
+        ) : (
+          actionOrders.map((order, i) => {
+            const meta = getActionMeta(order);
+            return (
+              <React.Fragment key={order._id}>
+                {i > 0 && <div className="h-px bg-gray-200 my-1" />}
+                <div className="flex items-center gap-2 py-2">
+                  <div className={`w-8 h-8 flex items-center justify-center rounded-md flex-shrink-0 ${meta.iconBg}`}>
+                    {meta.icon}
+                  </div>
+                  <div className="flex-1 flex flex-col">
+                    <span className="text-sm font-semibold text-gray-900">
+                      {order.orderNumber}
+                    </span>
+                    <span className="text-xs text-gray-400">{meta.label}</span>
+                  </div>
+                  <button className="px-3 py-1.5 text-xs font-bold bg-teal-500 text-white rounded hover:opacity-90 transition">
+                    {meta.btnLabel}
+                  </button>
+                </div>
+              </React.Fragment>
+            );
+          })
+        )}
 
-        <div className="h-px bg-gray-200 my-1" />
-
-        <div className="flex items-center gap-2 py-2">
-          <div className="w-8 h-8 flex items-center justify-center rounded-md bg-red-100 text-red-600 flex-shrink-0">
-            <AlertCircleIcon />
-          </div>
-          <div className="flex-1 flex flex-col">
-            <span className="text-sm font-semibold text-gray-900">Order #8825</span>
-            <span className="text-xs text-gray-400">Payment Failed</span>
-          </div>
-          <button className="px-3 py-1.5 text-xs font-bold bg-teal-500 text-white rounded hover:opacity-90 transition">
-            Retry
-          </button>
-        </div>
-
-        <button className="w-full mt-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border border-gray-200 rounded-sm hover:bg-teal-100 hover:text-teal-600 hover:border-teal-400 transition">
+        <Link
+          href="/admin/orders"
+          className="block w-full mt-3 py-2 text-xs font-semibold text-center text-gray-500 bg-gray-50 border border-gray-200 rounded-sm hover:bg-teal-100 hover:text-teal-600 hover:border-teal-400 transition"
+        >
           Go to Orders
-        </button>
+        </Link>
       </div>
     </div>
   );

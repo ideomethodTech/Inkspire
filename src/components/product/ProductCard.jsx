@@ -5,10 +5,11 @@ import { useState } from "react";
 import Button from "@/components/ui/Buttons";
 import { BodyXS, Caption } from "@/components/typography";
 import { addToCart } from "@/api/cart";
-import { useWishlist } from "@/context";
+import { useWishlist, useAlert } from "@/context";
 import { Heart } from "lucide-react";
 
 export default function ProductCard({ product }) {
+  const { showAlert } = useAlert();
   const productId = product.id || product._id;
   const priceNumber =
     typeof product.price === "number" ? product.price : Number(product.price);
@@ -24,7 +25,7 @@ export default function ProductCard({ product }) {
     const token =
       typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
     if (!token) {
-      alert("Please sign in to add items to cart.");
+      showAlert("Please sign in to add items to cart.", "warning");
       return;
     }
 
@@ -52,7 +53,7 @@ export default function ProductCard({ product }) {
     const token =
       typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
     if (!token) {
-      alert("Please sign in to manage your wishlist.");
+      showAlert("Please sign in to manage your wishlist.", "warning");
       return;
     }
 

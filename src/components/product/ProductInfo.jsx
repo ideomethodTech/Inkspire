@@ -1,25 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Headline, Body1, Body2, BodyXS, Caption, Label } from "@/components/typography";
 import Button from "@/components/ui/Buttons";
 import { addToCart } from "@/api/cart";
 import { useWishlist } from "@/context";
 import { Heart } from "lucide-react";
+import { useCoupons } from "@/lib/hooks/useCoupons";
 
 export default function ProductInfo({ product, onAddToCart }) {
-  const [selectedSize, setSelectedSize] = useState("A4");
+  const variants = Array.isArray(product.variants) ? product.variants : [];
+  const [selectedSize, setSelectedSize] = useState(variants[0]?.size || "A4");
   const [quantity, setQuantity] = useState(1);
   const [expandedSections, setExpandedSections] = useState({});
   const [cartMessage, setCartMessage] = useState("");
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  const { coupons } = useCoupons();
   const productId = product.id || product._id;
   
-  const priceNumber =
-    typeof product.price === "number" ? product.price : Number(product.price);
+  const selectedVariant = variants.find(v => v.size === selectedSize) || variants[0];
+  const priceNumber = selectedVariant 
+    ? (typeof selectedVariant.price === "number" ? selectedVariant.price : Number(selectedVariant.price))
+    : (typeof product.price === "number" ? product.price : Number(product.price));
+  
   const hasPrice = Number.isFinite(priceNumber);
 
-  const sizes = ["A4", "A3", "13 x 19"];
+  const [couponTimeLeft, setCouponTimeLeft] = useState(null);
+
+  const firstCoupon = coupons?.[0];
+  const firstCouponExpiryRaw =
+    firstCoupon?.expiryDate || firstCoupon?.expiry || firstCoupon?.expiresAt;
+  const firstCouponExpiryMs = firstCouponExpiryRaw
+    ? new Date(firstCouponExpiryRaw).getTime()
+    : null;
+  const hasValidCouponExpiry = Number.isFinite(firstCouponExpiryMs);
+
+  useEffect(() => {
+    if (!hasValidCouponExpiry) {
+      setCouponTimeLeft(null);
+      return undefined;
+    }
+
+    const updateTimeLeft = () => {
+      const diffMs = firstCouponExpiryMs - Date.now();
+      if (diffMs <= 0) {
+        setCouponTimeLeft("Expired");
+        return;
+      }
+
+      const totalMinutes = Math.floor(diffMs / 60000);
+      const days = Math.floor(totalMinutes / 1440);
+      const hours = Math.floor((totalMinutes % 1440) / 60);
+      const minutes = totalMinutes % 60;
+      setCouponTimeLeft(`${days}d ${hours}h ${minutes}m`);
+    };
+
+    updateTimeLeft();
+    const intervalId = setInterval(updateTimeLeft, 1000);
+    return () => clearInterval(intervalId);
+  }, [firstCouponExpiryMs, hasValidCouponExpiry]);
 
   const toggleSection = (section) => {
     setExpandedSections((prev) => ({
@@ -59,7 +98,6 @@ export default function ProductInfo({ product, onAddToCart }) {
       return;
     }
 
-    const variants = Array.isArray(product.variants) ? product.variants : [];
     let variantIndex = variants.findIndex((v) => v.size === selectedSize);
     if (variantIndex < 0) variantIndex = 0;
 
@@ -134,20 +172,29 @@ export default function ProductInfo({ product, onAddToCart }) {
             SIZE GUIDE
           </button>
         </div>
-        <div className="flex gap-3">
-          {sizes.map((size) => (
+        <div className="flex gap-3 flex-wrap">
+          {variants.length > 0 ? (
+            variants.map((variant) => (
+              <button
+                key={variant._id || variant.size}
+                type="button"
+                onClick={() => setSelectedSize(variant.size)}
+                className={`px-6 py-2 border-2 uppercase text-[12px] font-medium tracking-[0.16em] transition-all ${selectedSize === variant.size
+                    ? "border-black bg-black text-white"
+                    : "border-neutral-300 bg-white text-[#20262B] hover:border-black"
+                  }`}
+              >
+                {variant.size}
+              </button>
+            ))
+          ) : (
             <button
-              key={size}
               type="button"
-              onClick={() => setSelectedSize(size)}
-              className={`px-6 py-2 border-2 uppercase text-[12px] font-medium tracking-[0.16em] transition-all ${selectedSize === size
-                  ? "border-black bg-black text-white"
-                  : "border-neutral-300 bg-white text-[#20262B] hover:border-black"
-                }`}
+              className="px-6 py-2 border-2 border-black bg-black text-white uppercase text-[12px] font-medium tracking-[0.16em]"
             >
-              {size}
+              Standard
             </button>
-          ))}
+          )}
         </div>
       </div>
 
@@ -214,7 +261,7 @@ export default function ProductInfo({ product, onAddToCart }) {
             10% OFF FIRST ORDER
           </BodyXS>
           <Caption className="text-[11px] uppercase tracking-[0.16em]">
-            Time left 3d 12h 47m
+            Time left {couponTimeLeft || "—"}
           </Caption>
         </div>
       </div>

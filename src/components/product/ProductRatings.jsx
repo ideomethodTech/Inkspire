@@ -155,7 +155,7 @@ export default function ProductRatings({
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <BodyXS className="font-semibold text-[#20262B]">
-                    {review.user?.name || review.userName || "Anonymous"}
+                    {review.userId?.displayName || review.displayName || review.user?.name || review.userName || "Anonymous"}
                   </BodyXS>
                   <Caption className="text-[11px] text-[#6D6D6D]">
                     {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : "Recently"}

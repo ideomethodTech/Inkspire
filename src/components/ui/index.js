@@ -1,7 +1,6 @@
 // UI Components - Base reusable components
-// Add your exports here:
-// export { default as Button } from './Button';
-// export { default as Input } from './Input';
-// export { default as Card } from './Card';
-// export { default as Modal } from './Modal';
-// export { default as Spinner } from './Spinner';
+export * from './Alert';
+export { Button } from './button';
+export { Card } from './card';
+export { Input } from './input';
+export { Checkbox } from './checkbox';

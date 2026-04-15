@@ -283,12 +283,13 @@ export default function CartPage() {
                     type="text"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
-                    placeholder="Enter code"
-                    className="flex-1 border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                    placeholder={(appliedCoupon || apiData?.appliedCoupon) ? "Coupon already applied" : "Enter code"}
+                    disabled={!!(appliedCoupon || apiData?.appliedCoupon)}
+                    className="flex-1 border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black disabled:bg-neutral-50 disabled:text-neutral-400"
                   />
                   <button
                     type="submit"
-                    disabled={couponLoading}
+                    disabled={couponLoading || !!(appliedCoupon || apiData?.appliedCoupon)}
                     className="bg-black px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-white disabled:bg-neutral-300"
                   >
                     Apply

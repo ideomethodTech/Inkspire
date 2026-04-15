@@ -4,15 +4,17 @@ import { useState } from "react";
 import { Headline } from "../typography";
 import Link from "next/link";
 import { useNewsletter } from "@/lib/hooks/useNewsletter";
+import { useAlert } from "@/context";
 
 export default function Footer() {
+  const { showAlert } = useAlert();
   const { subscribe, loading, error, success } = useNewsletter();
   const [email, setEmail] = useState("");
   const [agreed, setAgreed] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!agreed) return alert("Please agree to subscribe.");
+    if (!agreed) return showAlert("Please agree to subscribe.", "warning");
     try {
       await subscribe(email);
       setEmail("");

@@ -8,8 +8,10 @@ import { useRouter } from "next/navigation";
 
 export default function CouponsPage() {
   const [activeTab, setActiveTab] = useState("available");
-  const { coupons, loading, error } = useCoupons();
+  const { coupons, loading, error, appliedCoupon } = useCoupons();
   const router = useRouter();
+
+  const isAlreadyApplied = !!appliedCoupon;
 
   const normalizedCoupons = coupons.map((coupon) => {
     const expiryDate = coupon.expiryDate || coupon.expiry || coupon.expiresAt;
@@ -97,6 +99,7 @@ export default function CouponsPage() {
               key={coupon.id} 
               coupon={coupon} 
               status={activeTab} 
+              isAlreadyApplied={isAlreadyApplied}
               onApply={() => handleApply(coupon)}
             />
           ))
@@ -106,10 +109,17 @@ export default function CouponsPage() {
   );
 }
 
-function CouponCard({ coupon, status, onApply }) {
+function CouponCard({ coupon, status, onApply, isAlreadyApplied }) {
   const getButtonProps = () => {
     switch (status) {
       case "available":
+        if (isAlreadyApplied) {
+          return {
+            text: "Already Applied",
+            className: "bg-gray-100 text-gray-500 cursor-not-allowed",
+            disabled: true,
+          };
+        }
         return {
           text: "Apply",
           className: "bg-black text-white hover:bg-gray-800",

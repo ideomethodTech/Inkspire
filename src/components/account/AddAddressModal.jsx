@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { addAddress } from "@/api/address";
+import { useAlert } from "@/context";
 
 export default function AddAddressModal({ onClose, onSuccess }) {
+  const { showAlert } = useAlert();
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -27,7 +29,7 @@ export default function AddAddressModal({ onClose, onSuccess }) {
       onSuccess(newAddress); // Add to ProfilePage state
       onClose();
     } catch (err) {
-      alert("Failed to add address");
+      showAlert("Failed to add address", "destructive");
       console.error(err);
     }
   };

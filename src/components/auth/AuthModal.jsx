@@ -14,8 +14,10 @@ import {
 } from "firebase/auth";
 import PhoneInput from 'react-phone-number-input';
 import countryList from 'react-select-country-list';
+import { useAlert } from "@/context";
 
 export default function AuthModal({ initialMode = "signin", onClose, onLoginSuccess }) {
+  const { showAlert } = useAlert();
   const [mode, setMode] = useState(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,12 +30,11 @@ export default function AuthModal({ initialMode = "signin", onClose, onLoginSucc
   const googleProvider = new GoogleAuthProvider();
   const [errors, setErrors] = useState({});
 
-// --- Handle login ---
-const handleLogin = async () => {
-  if (!email) return alert("Please enter your email");
-  if (!password) return alert("Please enter your password");
-
-  setLoading(true);
+  // --- Handle login ---
+  const handleLogin = async () => {
+    if (!email) return showAlert("Please enter your email");
+    if (!password) return showAlert("Please enter your password");
+    setLoading(true);
 
   try {
     const userCredential = await signInWithEmailAndPassword(
@@ -125,7 +126,7 @@ if (!phoneNumber || !/^\+[1-9]\d{7,14}$/.test(phoneNumber)) {
       window.location.href = "/user/profile";
     } catch (error) {
       console.error("Signup failed:", error);
-      alert(error.response?.data?.message || error.message || "Signup failed");
+      showAlert(error.response?.data?.message || error.message || "Signup failed");
     } finally {
       setLoading(false);
     }
@@ -146,7 +147,7 @@ if (!phoneNumber || !/^\+[1-9]\d{7,14}$/.test(phoneNumber)) {
       window.location.href = "/user/profile";
     } catch (error) {
       console.error("Google login failed:", error);
-      alert(error.message || "Google login failed");
+      showAlert(error.message || "Google login failed");
     } finally {
       setLoading(false);
     }

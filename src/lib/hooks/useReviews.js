@@ -5,6 +5,7 @@ import {
   updateReview,
   deleteReview,
 } from "@/services/reviewService";
+import { useAuthContext } from "@/context";
 
 export function useReviews(productId) {
   const [reviews, setReviews] = useState([]);
@@ -12,6 +13,7 @@ export function useReviews(productId) {
   const [totalReviews, setTotalReviews] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { user } = useAuthContext();
 
   const fetchReviews = useCallback(async () => {
     if (!productId) return;
@@ -67,7 +69,27 @@ export function useReviews(productId) {
   const addReview = async (reviewData) => {
     setLoading(true);
     try {
-      const result = await submitReview({ ...reviewData, productId });
+      let storedUser = null;
+      if (typeof window !== "undefined") {
+        try {
+          const raw = window.localStorage.getItem("user");
+          storedUser = raw ? JSON.parse(raw) : null;
+        } catch (err) {
+          console.warn("Failed to parse stored user", err);
+        }
+      }
+
+      const activeUser = user || storedUser;
+      const userId = activeUser?.userId || activeUser?.id || activeUser?._id;
+      const userName =
+        activeUser?.displayName || activeUser?.name || activeUser?.username;
+
+      const result = await submitReview({
+        ...reviewData,
+        productId,
+        userId,
+        userName,
+      });
       await fetchReviews();
       return result;
     } catch (err) {

@@ -1,8 +1,12 @@
+"use client";
+
 import React from "react";
 import { Headline, Subheading2, Body1, HeadlineXL,Subheading1, Label,Body2,Caption} from "@/components/typography";
  import Swatch from "./components/Swatch";
 
 import Button from "@/components/ui/Buttons";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui";
+import { AlertTriangle } from "lucide-react";
 
 export default function DesignSystemPage () {
  return (
@@ -72,6 +76,55 @@ export default function DesignSystemPage () {
             <Label>Label - Lorem ipsum dolor sit amet.</Label>
           </div>
         </section> 
+        {/* Alerts Section */}
+<section className="mt-12">
+  <Subheading2 className="mb-3 pb-3 border-b-2 border-neutral-400">
+    Alerts
+  </Subheading2>
+  <div className="max-w-3xl flex flex-col gap-4">
+    <div>
+      <Body1 className="mb-3 font-bold">Success (Acknowledging)</Body1>
+      <Alert variant="success">
+        <AlertTitle>Success</AlertTitle>
+        <AlertDescription>
+          Your action has been successfully completed.
+        </AlertDescription>
+      </Alert>
+    </div>
+
+    <div>
+      <Body1 className="mb-3 font-bold">Warning (Informative)</Body1>
+      <Alert variant="warning">
+        <AlertTitle>Attention</AlertTitle>
+        <AlertDescription>
+          Please review the details before proceeding further.
+        </AlertDescription>
+      </Alert>
+    </div>
+
+    <div>
+      <Body1 className="mb-3 font-bold">Error (Destructive)</Body1>
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>
+          Something went wrong. Please try again later.
+        </AlertDescription>
+      </Alert>
+    </div>
+    
+    <div>
+      <Body1 className="mb-3 font-bold">Dismissible Alert</Body1>
+      <Alert onClose={() => console.log("Dismissed")}>
+        <AlertTitle>Default Alert</AlertTitle>
+        <AlertDescription>
+          This is a default dismissible alert.
+        </AlertDescription>
+      </Alert>
+    </div>
+  </div>
+</section>
+
         {/* Buttons Section */}
 <section className="mt-12">
   <Subheading2 className="mb-3 pb-3 border-b-2 border-neutral-400">

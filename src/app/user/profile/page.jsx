@@ -9,12 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import PhoneInput from 'react-phone-number-input';
 import countryList from "react-select-country-list";
+import { useAlert } from "@/context";
 
 export default function ProfilePage() {
 return <DesktopProfilePage />;
 }
 
 function DesktopProfilePage() {
+const { showAlert } = useAlert();
 const { profile, loading: profileLoading, error: profileError, updateProfile } = useProfile();
 const { addresses, loading: addressLoading, error: addressError, addAddress, updateAddress: editAddress, deleteAddress } = useAddress();
 
@@ -82,7 +84,7 @@ e.preventDefault();
 
 // Basic Validation
 if (!addressForm.name || !addressForm.phone || !addressForm.addressLine || !addressForm.city || !addressForm.country || !addressForm.zip) {
-alert("All address fields are required");
+showAlert("All address fields are required", "warning");
 return;
 }
 

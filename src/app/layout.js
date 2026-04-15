@@ -3,7 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import ConditionalHeader from "@/components/layout/ConditionalHeader";
 import ConditionalFooter from "@/components/layout/ConditionalFooter";
-import { AuthProvider, CartProvider, WishlistProvider } from "@/context";
+import { AuthProvider, CartProvider, WishlistProvider, AlertProvider } from "@/context";
 import 'react-phone-number-input/style.css';
 
 const poppins = Poppins({
@@ -32,13 +32,15 @@ export default function RootLayout({ children }) {
     <html lang="en" className={poppins.variable}>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <ConditionalHeader />
-              {children}
-              <ConditionalFooter />
-            </WishlistProvider>
-          </CartProvider>
+          <AlertProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <ConditionalHeader />
+                {children}
+                <ConditionalFooter />
+              </WishlistProvider>
+            </CartProvider>
+          </AlertProvider>
         </AuthProvider>
       </body>
     </html>

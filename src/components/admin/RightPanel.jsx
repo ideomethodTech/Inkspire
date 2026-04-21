@@ -207,7 +207,7 @@ export default function RightPanel() {
         >
           Go to Orders
         </Link>
-      </div>
+x      </div>
     </div>
   );
 }
